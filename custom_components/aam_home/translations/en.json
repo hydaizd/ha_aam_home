@@ -1,0 +1,27 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "AAM device setup",
+        "description": "By selecting **Submit**, we will attempt to get the device list from the designated AAM smart box host.",
+        "data": {
+          "host": "AAM smart box host address"
+        }
+      }
+    },
+    "abort": {
+      "single_instance_allowed": "This integration only allow single instance."
+    }
+  },
+  "options": {
+    "step": {
+      "user": {
+        "title": "AAM device setup.",
+        "description": "By1 selecting **Submit**, we will attempt to get the device list from the designated AAM smart host.",
+        "data": {
+          "host": "AAM smart box host address."
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,13 @@
+{
+  "domain": "aam_home",
+  "name": "艾美智空间设备控制器",
+  "config_flow": true,
+  "documentation": "https://github.com/hydaizd/ha_dd_home",
+  "issue_tracker": "https://github.com/hydaizd/ha_dd_home/issues",
+  "dependencies": [],
+  "codeowners": [
+    "@hydaizd"
+  ],
+  "requirements": [],
+  "version": "v1.0.0"
+}
