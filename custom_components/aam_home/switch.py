@@ -30,6 +30,8 @@ async def async_setup_entry(
     # 从协调器获取设备数据
     devices = coordinator.data.get("devices", [])
 
+    _LOGGER.info("设备数据: %s", devices)
+
     # 创建开关实体
     entities = []
     for device in devices:
