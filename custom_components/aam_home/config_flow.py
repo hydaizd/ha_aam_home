@@ -67,12 +67,6 @@ class AamHomeConfigFlow(ConfigFlow, domain=DOMAIN):
             else:
                 return self.async_create_entry(title=info["title"], data=user_input)
 
-        """Handle user flow."""
-        if user_input:
-            if user_input["host"]:
-                return await self.async_step_device()
-            return await self.async_step_configure()
-
         # 显示配置表单
         data_schema = vol.Schema({
             vol.Required(CONF_HOST, default=""): str,
