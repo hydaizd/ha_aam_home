@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import asyncio
+import hashlib
 import logging
 from typing import Any
 
@@ -29,6 +30,7 @@ class LocalAPI:
     ) -> None:
         """初始化API客户端."""
         self._host = host.rstrip("/")
+        self._base_url = f"http://{self._host}:10088"
         self._username = username
         self._password = password
         self._session = session
@@ -38,10 +40,15 @@ class LocalAPI:
 
     async def async_login(self) -> bool:
         """登录到智能盒子."""
-        url = f"{self._host}/{API_LOGIN.lstrip('/')}"
+        url = f"{self._base_url}/{API_LOGIN.lstrip('/')}"
+
+        md5 = hashlib.md5()
+        passwd = self._password
+        md5.update(passwd.encode())
+
         payload = {
             "username": self._username,
-            "password": self._password
+            "passwd": md5.hexdigest()
         }
 
         try:
@@ -75,7 +82,7 @@ class LocalAPI:
             if not await self.async_login():
                 return []
 
-        url = f"{self._host}/{API_DEVICES.lstrip('/')}"
+        url = f"{self._base_url}/{API_DEVICES.lstrip('/')}"
         headers = {
             "Authorization": f"Bearer {self._token}",
             "Content-Type": "application/json"
@@ -115,7 +122,7 @@ class LocalAPI:
             if not await self.async_login():
                 return False
 
-        url = f"{self._host}/{API_CONTROL.lstrip('/')}"
+        url = f"{self._base_url}/{API_CONTROL.lstrip('/')}"
         headers = {
             "Authorization": f"Bearer {self._token}",
             "Content-Type": "application/json"

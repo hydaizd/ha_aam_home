@@ -48,7 +48,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     coordinator = DataUpdateCoordinator(
         hass,
         _LOGGER,
-        name="my_smart_box",
+        name="aam_home",
         update_method=async_update_data,
         update_interval=DEFAULT_SCAN_INTERVAL,
     )
