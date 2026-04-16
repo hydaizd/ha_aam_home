@@ -30,8 +30,6 @@ async def async_setup_entry(
     # 从协调器获取设备数据
     devices = coordinator.data.get("devices", [])
 
-    _LOGGER.error("设备数据: %s", devices)
-
     # 创建开关实体
     entities = []
     for device in devices:
@@ -50,7 +48,7 @@ async def async_setup_entry(
 
 
 class AamSwitchEntity(CoordinatorEntity, SwitchEntity):
-    """表示智能盒子开关实体."""
+    """表示智空间盒子开关实体."""
 
     def __init__(
             self,
@@ -71,7 +69,7 @@ class AamSwitchEntity(CoordinatorEntity, SwitchEntity):
         self._attr_device_info = {
             "identifiers": {(DOMAIN, entry_id)},
             "name": self._device.get("name"),  # 设备名
-            "manufacturer": "艾美智空间",
+            "manufacturer": "艾美科技",
             "model": self._device.get("productKey", "unknown")
         }
 
