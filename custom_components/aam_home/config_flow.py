@@ -42,7 +42,7 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
     if not devices:
         raise CannotConnect
 
-    return {"title": f"智能盒子 ({data[CONF_HOST]})"}
+    return {"title": f"智空间盒子 ({data[CONF_HOST]})"}
 
 
 class AamHomeConfigFlow(ConfigFlow, domain=DOMAIN):

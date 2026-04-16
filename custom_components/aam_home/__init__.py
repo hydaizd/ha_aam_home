@@ -38,7 +38,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
 
     # 登录并获取初始设备列表
     if not await api.async_login():
-        _LOGGER.error("无法登录到智能盒子")
+        _LOGGER.error("无法登录到艾美智空间盒子")
         return False
 
     # 创建数据更新协调器[4](@ref)
