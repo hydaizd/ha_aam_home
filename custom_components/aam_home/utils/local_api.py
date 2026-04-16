@@ -82,7 +82,7 @@ class LocalAPI:
             if not await self.async_login():
                 return []
 
-        url = f"{self._base_url}/{API_DEVICES.lstrip('/')}"
+        url = f"{self._base_url}/{API_DEVICES.lstrip('/')}?isAll=true&orderBy=productTypeClass&isShow=true"
         headers = {
             "Authorization": f"Bearer {self._token}",
             "Content-Type": "application/json"
