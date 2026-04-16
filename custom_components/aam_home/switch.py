@@ -34,7 +34,7 @@ async def async_setup_entry(
     entities = []
     for device in devices:
         product_key = device.get("productKey", "")
-        if product_key in ["7504"] and device.get("midBindId") in TEST_DEVICE_ID:  # 空开设备
+        if product_key in ["7504"]:  # 空开设备
             entities.append(
                 AamSwitchEntity(
                     coordinator,
