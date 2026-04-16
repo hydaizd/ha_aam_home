@@ -77,7 +77,7 @@ class AamLightEntity(CoordinatorEntity, LightEntity):
     def extra_state_attributes(self) -> dict[str, Any]:
         """返回设备额外属性."""
         attrs = {
-            "endpoint_id": self._device.get("endpointId"),
+            "endpoint_id": self._device.get("endpoint"),
             "group_id": self._device.get("groupId"),
             "mid_bind_id": self._device.get("midBindId"),
             "device_type": self._device.get("type"),

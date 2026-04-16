@@ -68,13 +68,13 @@ class AamSwitchEntity(CoordinatorEntity, SwitchEntity):
         self._attr_unique_id = f"{entry_id}_{device.get('midBindId')}"
         self._attr_device_info = {
             "identifiers": {(DOMAIN, entry_id)},
-            "name": self._device.get("name"),  # 设备名
+            "name": device.get("name"),  # 设备名
             "manufacturer": "艾美科技",
-            "model": self._device.get("productKey", "unknown")
+            "model": device.get("productKey", "unknown")
         }
 
         # 从设备数据初始化状态
-        self._attr_is_on = device.get("state", 0) == 1
+        self._value = device.get("state", 0) == 1
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
@@ -97,7 +97,7 @@ class AamSwitchEntity(CoordinatorEntity, SwitchEntity):
         )
 
         if success:
-            self._attr_is_on = True
+            self._value = True
             self.async_write_ha_state()
 
             # 触发协调器更新
@@ -115,7 +115,7 @@ class AamSwitchEntity(CoordinatorEntity, SwitchEntity):
         )
 
         if success:
-            self._attr_is_on = False
+            self._value = False
             self.async_write_ha_state()
 
             # 触发协调器更新
@@ -123,14 +123,14 @@ class AamSwitchEntity(CoordinatorEntity, SwitchEntity):
         else:
             _LOGGER.error("无法关闭开关: %s", self._attr_name)
 
-    def _handle_coordinator_update(self) -> None:
-        """处理协调器更新."""
-        # 从最新数据中查找当前设备状态
-        devices = self.coordinator.data.get("devices", [])
-        for device in devices:
-            if device.get("midBindId") == self._device.get("midBindId"):
-                self._device = device
-                self._attr_is_on = device.get("state", 0) == 1
-                break
-
-        self.async_write_ha_state()
+    # def _handle_coordinator_update(self) -> None:
+    #     """处理协调器更新."""
+    #     # 从最新数据中查找当前设备状态
+    #     devices = self.coordinator.data.get("devices", [])
+    #     for device in devices:
+    #         if device.get("midBindId") == self._device.get("midBindId"):
+    #             self._device = device
+    #             self._attr_is_on = device.get("state", 0) == 1
+    #             break
+    #
+    #     self.async_write_ha_state()
