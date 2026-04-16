@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import logging
+from datetime import timedelta
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -51,7 +52,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         _LOGGER,
         name="aam_home",
         update_method=async_update_data,
-        update_interval=DEFAULT_SCAN_INTERVAL,
+        update_interval=timedelta(seconds=DEFAULT_SCAN_INTERVAL),
     )
 
     # 获取初始数据
