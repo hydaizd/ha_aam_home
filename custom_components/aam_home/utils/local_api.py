@@ -94,8 +94,13 @@ class LocalAPI:
 
                 if response.status == 200:
                     data = await response.json()
-                    self._devices = data.get("devices", [])
-                    return self._devices
+                    if data.get("success"):
+                        # 请求成功
+                        self._devices = data.get("data", {}).get("items", [])
+                        return self._devices
+                    else:
+                        _LOGGER.error("获取设备失败: %s", data.get("msg"))
+                        return []
                 elif response.status == 401:
                     # Token过期，重新登录
                     if await self.async_login():
