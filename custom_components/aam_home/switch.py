@@ -33,8 +33,8 @@ async def async_setup_entry(
     # 创建开关实体
     entities = []
     for device in devices:
-        device_type = device.get("type", "")
-        if device_type in ["switch", "outlet"] and device.get("midBindId") in TEST_DEVICE_ID:  # 空开设备
+        product_key = device.get("productKey", "")
+        if product_key in ["7504"] and device.get("midBindId") in TEST_DEVICE_ID:  # 空开设备
             entities.append(
                 AamSwitchEntity(
                     coordinator,
@@ -83,8 +83,8 @@ class AamSwitchEntity(CoordinatorEntity, SwitchEntity):
             "endpoint_id": self._device.get("endpointId"),
             "group_id": self._device.get("groupId"),
             "mid_bind_id": self._device.get("midBindId"),
-            "device_type": self._device.get("type"),
-            "firmware_version": self._device.get("firmwareVersion", "unknown")
+            "product_key": self._device.get("productKey"),
+            "firmware_version": self._device.get("version", "unknown")
         }
 
     async def async_turn_on(self, **kwargs: Any) -> None:
