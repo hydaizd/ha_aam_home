@@ -26,7 +26,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     hass.data.setdefault(DOMAIN, {})
 
     # 创建API客户端
-    session = hass.helpers.aiohttp_client.async_get_clientsession()
+    session = hass.http.async_get_clientsession()
     api = LocalAPI(
         host=config_entry.data[CONF_HOST],
         username=config_entry.data[CONF_USERNAME],
