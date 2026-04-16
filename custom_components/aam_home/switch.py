@@ -8,7 +8,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN, DATA_API_CLIENT, DATA_COORDINATOR, TEST_DEVICE_ID
+from .const import DOMAIN, DATA_API_CLIENT, DATA_COORDINATOR
 from .utils.local_api import LocalAPI
 
 # 用于在 HA 前端显示的名称
@@ -66,13 +66,13 @@ class AamSwitchEntity(CoordinatorEntity, SwitchEntity):
         self._entry_id = entry_id
 
         # 设备属性
-        self._attr_name = device.get("name", f"开关 {device.get('endpointId')}")
+        self._attr_name = device.get("endpointName", f"开关 {device.get('endpointId')}")  # 实体名
         self._attr_unique_id = f"{entry_id}_{device.get('midBindId')}"
         self._attr_device_info = {
             "identifiers": {(DOMAIN, entry_id)},
-            "name": f"智能盒子 {entry_id}",
-            "manufacturer": "智能盒子厂商",
-            "model": "智能控制盒"
+            "name": self._device.get("name"),  # 设备名
+            "manufacturer": "艾美智空间",
+            "model": self._device.get("productKey", "unknown")
         }
 
         # 从设备数据初始化状态
@@ -82,7 +82,7 @@ class AamSwitchEntity(CoordinatorEntity, SwitchEntity):
     def extra_state_attributes(self) -> dict[str, Any]:
         """返回设备额外属性."""
         return {
-            "endpoint_id": self._device.get("endpointId"),
+            "endpoint_id": self._device.get("endpoint"),
             "group_id": self._device.get("groupId"),
             "mid_bind_id": self._device.get("midBindId"),
             "product_key": self._device.get("productKey"),
@@ -92,7 +92,7 @@ class AamSwitchEntity(CoordinatorEntity, SwitchEntity):
     async def async_turn_on(self, **kwargs: Any) -> None:
         """打开开关."""
         success = await self._api.async_control_device(
-            endpoint_id=self._device.get("endpointId"),
+            endpoint_id=self._device.get("endpoint"),
             group_id=self._device.get("groupId"),
             mid_bind_id=self._device.get("midBindId"),
             state=1
@@ -110,7 +110,7 @@ class AamSwitchEntity(CoordinatorEntity, SwitchEntity):
     async def async_turn_off(self, **kwargs: Any) -> None:
         """关闭开关."""
         success = await self._api.async_control_device(
-            endpoint_id=self._device.get("endpointId"),
+            endpoint_id=self._device.get("endpoint"),
             group_id=self._device.get("groupId"),
             mid_bind_id=self._device.get("midBindId"),
             state=0
