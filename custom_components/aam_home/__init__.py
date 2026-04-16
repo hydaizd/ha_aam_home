@@ -5,6 +5,7 @@ import logging
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import (
     DOMAIN,
@@ -26,7 +27,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     hass.data.setdefault(DOMAIN, {})
 
     # 创建API客户端
-    session = hass.http.async_get_clientsession()
+    session = async_get_clientsession(hass)
     api = LocalAPI(
         host=config_entry.data[CONF_HOST],
         username=config_entry.data[CONF_USERNAME],
