@@ -71,7 +71,7 @@ class AamHomeConfigFlow(ConfigFlow, domain=DOMAIN):
             self._password = user_input.get(CONF_PASSWORD, self._password)
 
             try:
-                await self.async_step_auth(user_input)
+                return await self.async_step_auth(user_input)
             except Exception as err:
                 _LOGGER.error('async_step_auth_config, %s', err)
                 return await self.__show_auth_config_form(str(err))
@@ -107,7 +107,7 @@ class AamHomeConfigFlow(ConfigFlow, domain=DOMAIN):
     async def __show_auth_config_form(self, reason: str):
         """显示认证配置表单."""
         return self.async_show_form(
-            step_id="user",
+            step_id="auth_config",
             data_schema=vol.Schema({
                 vol.Required(CONF_HOST, default=""): str,
                 vol.Required(CONF_USERNAME, default="admin"): str,
