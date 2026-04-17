@@ -64,7 +64,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
                     **info,
                     'manufacturer': "艾美科技"
                 })
-            _LOGGER.warning('mid_bind_id, %s', 'device, %s', mid_bind_id, device.name)
+            # _LOGGER.warning('mid_bind_id: %s, device: %s', mid_bind_id, device.name)
             iot_devices.append(device)
 
         hass.data[DOMAIN]['devices'][config_entry.entry_id] = iot_devices
