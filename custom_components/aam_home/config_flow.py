@@ -88,8 +88,8 @@ class AamHomeConfigFlow(ConfigFlow, domain=DOMAIN):
                 )
                 self._iot_auth = iot_auth
 
-                await self.__check_auth_async()
-                await self.config_flow_done()
+            await self.__check_auth_async()
+            return await self.config_flow_done()
         except Exception as err:  # pylint: disable=broad-exception-caught
             _LOGGER.error('async_step_auth, %s', err)
             raise err
@@ -107,7 +107,7 @@ class AamHomeConfigFlow(ConfigFlow, domain=DOMAIN):
     async def __show_auth_config_form(self, reason: str):
         """显示认证配置表单."""
         return self.async_show_form(
-            step_id="user",
+            step_id="auth_config",
             data_schema=vol.Schema({
                 vol.Required(CONF_HOST, default=""): str,
                 vol.Required(CONF_USERNAME, default="admin"): str,
