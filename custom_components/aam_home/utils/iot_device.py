@@ -56,12 +56,12 @@ class IoTDevice:
 class IoTPropertyEntity(Entity):
     """智能设备属性."""
     iot_device: IoTDevice
-    _value: Any
+    _value: dict
 
     def __init__(self, iot_device: IoTDevice) -> None:
         self.iot_device = iot_device
 
-    async def ctrl_device_async(self, cmd: str, json_data: Any) -> bool:
+    async def ctrl_device_async(self, cmd: str, json_data: dict) -> bool:
         try:
             await self.iot_device.iot_client.ctrl_device_async(
                 cmd=cmd,
