@@ -31,7 +31,7 @@ async def async_setup(hass: HomeAssistant, hass_config: dict) -> bool:
 
 
 async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
-    """设置配置条目."""
+    """设置配置条目.配置条目创建后集成的入口点"""
 
     def ha_persistent_notify(
             notify_id: str, title: Optional[str] = None,

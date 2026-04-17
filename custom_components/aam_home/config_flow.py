@@ -51,6 +51,7 @@ class AamHomeConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
         """处理初始步骤."""
+        self.hass.data.setdefault(DOMAIN, {})
         if not self._storage_path:
             self._storage_path = self.hass.config.path('.storage', DOMAIN)
 
@@ -72,6 +73,7 @@ class AamHomeConfigFlow(ConfigFlow, domain=DOMAIN):
             try:
                 await self.async_step_auth(user_input)
             except Exception as err:
+                _LOGGER.error('async_step_auth_config, %s', err)
                 return await self.__show_auth_config_form(str(err))
         return await self.__show_auth_config_form('')
 
@@ -81,7 +83,7 @@ class AamHomeConfigFlow(ConfigFlow, domain=DOMAIN):
                 iot_auth = IoTAuthClient(
                     host=self._host,
                     username=self._username,
-                    password=user_input.get(CONF_PASSWORD),
+                    password=self._password,
                     loop=self._main_loop
                 )
                 self._iot_auth = iot_auth
@@ -89,6 +91,7 @@ class AamHomeConfigFlow(ConfigFlow, domain=DOMAIN):
                 await self.__check_auth_async()
                 await self.config_flow_done()
         except Exception as err:  # pylint: disable=broad-exception-caught
+            _LOGGER.error('async_step_auth, %s', err)
             raise err
 
     async def config_flow_done(self):
