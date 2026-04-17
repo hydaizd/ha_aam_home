@@ -45,7 +45,7 @@ class IoTStorage:
     def __get_full_path(self, domain: str, name: str, suffix: str) -> str:
         return os.path.join(self._root_path, domain, f'{name}.{suffix}')
 
-    async def update_user_config_async(self, username: str, host: str, config: Optional[dict[str, Any]],
+    async def update_user_config_async(self, uname: str, host: str, config: Optional[dict[str, Any]],
                                        replace: bool = False) -> bool:
         """Update user configuration."""
         if config is not None and len(config) == 0:
@@ -53,7 +53,7 @@ class IoTStorage:
             return True
 
         config_domain = 'iot_config'
-        config_name = f'{username}_{host}'
+        config_name = f'{uname}_{host}'
         if config is None:
             # Remove config file
             return await self.remove_async(domain=config_domain, name=config_name, type_=dict)
@@ -190,3 +190,18 @@ class IoTStorage:
         except (OSError, TypeError) as e:
             _LOGGER.error('load error, %s, %s', e, traceback.format_exc())
             return None
+
+    async def load_user_config_async(self, uname: str, host: str, keys: Optional[list[str]] = None) -> dict:
+        """Load user configuration."""
+        if isinstance(keys, list) and len(keys) == 0:
+            return {}
+        config_domain = 'iot_config'
+        config_name = f'{uname}_{host}'
+        local_config = (await self.load_async(domain=config_domain, name=config_name, type_=dict))
+        if not isinstance(local_config, dict):
+            return {}
+        if keys is None:
+            return local_config
+        return {
+            key: local_config[key] for key in keys
+            if key in local_config}

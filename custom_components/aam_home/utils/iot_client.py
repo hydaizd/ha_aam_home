@@ -7,6 +7,7 @@ from homeassistant.core import HomeAssistant
 
 from .http_client import IoTHttpClient, IoTAuthClient
 from .iot_error import IoTClientError
+from .iot_storage import IoTStorage
 from ..const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
@@ -18,9 +19,12 @@ class IoTClient:
     # pylint: disable=broad-exception-caught
     # pylint: disable=inconsistent-quotes
     _main_loop: asyncio.AbstractEventLoop
+    _storage: IoTStorage
 
+    _uname: str
     _entry_id: str
     _entry_data: dict
+    _host: str
     # MIoT oauth client
     _auth: Optional[IoTAuthClient]
     # IoT http client
@@ -31,7 +35,8 @@ class IoTClient:
     # Device list, {mid_bind_id: <info>}
     _device_list: dict[str, dict]
 
-    def __init__(self, entry_id: str, entry_data: dict, loop: Optional[asyncio.AbstractEventLoop] = None) -> None:
+    def __init__(self, entry_id: str, entry_data: dict, storage: IoTStorage,
+                 loop: Optional[asyncio.AbstractEventLoop] = None) -> None:
         # MUST run in a running event loop
         self._main_loop = loop or asyncio.get_running_loop()
         # Check params
@@ -40,6 +45,9 @@ class IoTClient:
 
         self._entry_id = entry_id
         self._entry_data = entry_data
+        self._uname = entry_data.get('username')
+        self._host = entry_data.get('host')
+        self._storage = storage
         self._auth = None
         self._http = None
         self._user_config = None
@@ -50,8 +58,11 @@ class IoTClient:
 
     async def init_async(self) -> None:
         """Init IoT client."""
-        # Load device list
-        self._device_list = await self._http.get_devices_async()
+        # Load user config and check
+        self._user_config = await self._storage.load_user_config_async(uname=self._uname, host=self._host)
+        if not self._user_config:
+            # Integration need to be add again
+            raise IoTClientError('load_user_config_async error')
 
         self._auth = IoTAuthClient(
             host=self._entry_data.get('host'),
@@ -64,6 +75,9 @@ class IoTClient:
             host=self._entry_data.get('host'),
             access_token=self._user_config['auth_info']['access_token'],
             loop=self._main_loop)
+
+        # Load device list
+        self._device_list = await self._http.get_devices_async()
 
     @property
     def device_list(self) -> dict:
