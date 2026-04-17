@@ -1,78 +1,97 @@
 # -*- coding: utf-8 -*-
-
 import logging
-from datetime import timedelta
+from typing import Optional
 
+from homeassistant.components import persistent_notification
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import (
     DOMAIN,
     CONF_HOST,
     CONF_USERNAME,
     CONF_PASSWORD,
-    DATA_COORDINATOR,
-    DATA_API_CLIENT,
-    DEFAULT_SCAN_INTERVAL,
     SUPPORTED_PLATFORMS
 )
-from .utils.local_api import LocalAPI
+from .utils.iot_client import IoTClient, get_iot_instance_async
+from .utils.iot_device import IoTDevice
+from .utils.iot_error import IoTAuthError, IoTClientError
 
 _LOGGER = logging.getLogger(__name__)
 
 
+async def async_setup(hass: HomeAssistant, hass_config: dict) -> bool:
+    # pylint: disable=unused-argument
+    hass.data.setdefault(DOMAIN, {})
+    # {[entry_id:str]: IoTClient}, iot client instance
+    hass.data[DOMAIN].setdefault('iot_clients', {})
+    # {[entry_id:str]: list[IoTDevice]}
+    hass.data[DOMAIN].setdefault('devices', {})
+    return True
+
+
 async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """设置配置条目."""
-    hass.data.setdefault(DOMAIN, {})
 
-    # 创建API客户端
-    session = async_get_clientsession(hass)
-    api = LocalAPI(
-        host=config_entry.data[CONF_HOST],
-        username=config_entry.data[CONF_USERNAME],
-        password=config_entry.data[CONF_PASSWORD],
-        session=session
-    )
+    def ha_persistent_notify(
+            notify_id: str, title: Optional[str] = None,
+            message: Optional[str] = None
+    ) -> None:
+        """Send messages in Notifications dialog box."""
+        if title:
+            persistent_notification.async_create(hass=hass, message=message or '', title=title,
+                                                 notification_id=notify_id)
+        else:
+            persistent_notification.async_dismiss(hass=hass, notification_id=notify_id)
 
-    # 登录并获取初始设备列表
-    if not await api.async_login():
-        _LOGGER.error("无法登录到艾美智空间盒子")
-        return False
+    entry_id = config_entry.entry_id
+    entry_data = dict(config_entry.data)
 
-    # 创建数据更新协调器[4](@ref)
-    async def async_update_data():
-        """从API获取最新数据."""
-        devices = await api.async_get_devices()
-        return {"devices": devices}
+    ha_persistent_notify(notify_id=f'{entry_id}.auth_error', title=None, message=None)
 
-    coordinator = DataUpdateCoordinator(
-        hass,
-        _LOGGER,
-        name="aam_home",
-        update_method=async_update_data,
-        update_interval=timedelta(seconds=DEFAULT_SCAN_INTERVAL),
-    )
+    try:
+        iot_client: IoTClient = await get_iot_instance_async(
+            hass=hass,
+            entry_id=entry_id,
+            entry_data=entry_data,
+            persistent_notify=ha_persistent_notify
+        )
+        iot_devices: list[IoTDevice] = []
+        for mid_bind_id, info in iot_client.device_list.items():
+            device: IoTDevice = IoTDevice(
+                iot_client=iot_client,
+                device_info={
+                    **info,
+                    'manufacturer': "艾美科技"
+                })
+            iot_devices.append(device)
 
-    # 获取初始数据
-    await coordinator.async_config_entry_first_refresh()
-
-    # 存储数据
-    hass.data[DOMAIN][config_entry.entry_id] = {
-        DATA_API_CLIENT: api,
-        DATA_COORDINATOR: coordinator
-    }
-
-    # 设置平台
-    await hass.config_entries.async_forward_entry_setups(config_entry, SUPPORTED_PLATFORMS)
+        hass.data[DOMAIN]['devices'][config_entry.entry_id] = iot_devices
+        # 设置平台
+        await hass.config_entries.async_forward_entry_setups(config_entry, SUPPORTED_PLATFORMS)
+    except IoTAuthError as auth_error:
+        ha_persistent_notify(
+            notify_id=f'{entry_id}.auth_error',
+            title='AAM Auth Error',
+            message=f'Please re-add.\r\nerror: {auth_error}'
+        )
+    except Exception as err:
+        raise err
 
     return True
 
 
 async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """卸载配置条目."""
-    if unload_ok := await hass.config_entries.async_unload_platforms(config_entry, SUPPORTED_PLATFORMS):
-        hass.data[DOMAIN].pop(config_entry.entry_id)
+    entry_id = config_entry.entry_id
+    unload_ok = await hass.config_entries.async_unload_platforms(config_entry, SUPPORTED_PLATFORMS)
+    if unload_ok:
+        hass.data[DOMAIN]['devices'].pop(entry_id, None)
 
-    return unload_ok
+    # Remove integration data
+    iot_client: IoTClient = hass.data[DOMAIN]['iot_clients'].pop(entry_id, None)
+    if iot_client:
+        await iot_client.de_init_async()
+    del iot_client
+
+    return True

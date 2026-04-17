@@ -8,8 +8,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN, DATA_API_CLIENT, DATA_COORDINATOR
-from .utils.local_api import LocalAPI
+from .const import DOMAIN
+from .utils.iot_device import IoTPropertyEntity, IoTDevice
 
 # 用于在 HA 前端显示的名称
 DEFAULT_NAME = "Aam Home Controlled Switch"
@@ -23,119 +23,47 @@ async def async_setup_entry(
         async_add_entities: AddEntitiesCallback,
 ) -> None:
     """设置开关平台."""
-    data = hass.data[DOMAIN][config_entry.entry_id]
-    api: LocalAPI = data[DATA_API_CLIENT]
-    coordinator = data[DATA_COORDINATOR]
-
-    # 从协调器获取设备数据
-    devices = coordinator.data.get("devices", [])
+    device_list: list[IoTDevice] = hass.data[DOMAIN]['devices'][config_entry.entry_id]
 
     # 创建开关实体
-    entities = []
-    for device in devices:
-        product_key = device.get("productKey", "")
-        if product_key in ["7504"]:  # 空开设备
-            entities.append(
-                AamSwitchEntity(
-                    coordinator,
-                    api,
-                    device,
-                    config_entry.entry_id
-                )
-            )
+    new_entities = []
+    for iot_device in device_list:
+        if iot_device.product_key in ["7504"]:
+            new_entities.append(AamSwitchEntity(iot_device=iot_device))
 
-    async_add_entities(entities)
+    if new_entities:
+        async_add_entities(new_entities)
 
 
-class AamSwitchEntity(CoordinatorEntity, SwitchEntity):
+class AamSwitchEntity(IoTPropertyEntity, SwitchEntity):
     """表示智空间盒子开关实体."""
 
-    def __init__(
-            self,
-            coordinator,
-            api: LocalAPI,
-            device: dict[str, Any],
-            entry_id: str
-    ) -> None:
+    def __init__(self, iot_device: IoTDevice) -> None:
         """初始化开关."""
-        super().__init__(coordinator)
-        self._api = api
-        self._device = device
-        self._entry_id = entry_id
-
-        # 设备属性
-        self._attr_name = device.get("endpointName", f"开关 {device.get('endpointId')}")  # 实体名
-        self._attr_unique_id = f"{entry_id}_{device.get('midBindId')}"
-        self._attr_device_info = {
-            "identifiers": {(DOMAIN, entry_id)},
-            "name": device.get("name"),  # 设备名
-            "manufacturer": "艾美科技",
-            "model": device.get("productKey", "unknown")
-        }
-
-        # 从设备数据初始化状态
-        self._attr_is_on = device.get("state", 0) == 1
+        super().__init__(iot_device=iot_device)
 
     @property
     def is_on(self) -> bool:
         """开/关 状态."""
-        return self._attr_is_on is True
-
-    @property
-    def extra_state_attributes(self) -> dict[str, Any]:
-        """返回设备额外属性."""
-        return {
-            "endpoint_id": self._device.get("endpoint"),
-            "group_id": self._device.get("groupId"),
-            "mid_bind_id": self._device.get("midBindId"),
-            "product_key": self._device.get("productKey"),
-            "firmware_version": self._device.get("version", "unknown")
-        }
+        return self._value.get("State") == 1
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """打开开关."""
-        success = await self._api.async_control_device(
-            endpoint_id=self._device.get("endpoint"),
-            group_id=self._device.get("groupId"),
-            mid_bind_id=self._device.get("midBindId"),
-            state=1
-        )
-
-        if success:
-            self._attr_is_on = True
-            self.async_write_ha_state()
-
-            # 触发协调器更新
-            await self.coordinator.async_request_refresh()
-        else:
-            _LOGGER.error("无法打开开关: %s", self._attr_name)
+        cmd = "set_state"
+        json_data = {"State": 1}
+        await self.ctrl_device_async(self.iot_device, cmd, json_data)
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """关闭开关."""
-        success = await self._api.async_control_device(
-            endpoint_id=self._device.get("endpoint"),
-            group_id=self._device.get("groupId"),
-            mid_bind_id=self._device.get("midBindId"),
-            state=0
-        )
+        cmd = "set_state"
+        json_data = {"State": 0}
+        await self.ctrl_device_async(self.iot_device, cmd, json_data)
 
-        if success:
-            self._attr_is_on = False
-            self.async_write_ha_state()
-
-            # 触发协调器更新
-            await self.coordinator.async_request_refresh()
+    async def async_toggle(self, **kwargs: Any) -> None:
+        """切换开关."""
+        cmd = "set_state"
+        if self.is_on:
+            json_data = {"State": 0}
         else:
-            _LOGGER.error("无法关闭开关: %s", self._attr_name)
-
-    def _handle_coordinator_update(self) -> None:
-        """处理协调器更新."""
-        # 从最新数据中查找当前设备状态
-        devices = self.coordinator.data.get("devices", [])
-        for device in devices:
-            if device.get("midBindId") == self._device.get("midBindId"):
-                self._device = device
-                self._attr_is_on = device.get("state", 0) == 1
-                break
-
-        self.async_write_ha_state()
+            json_data = {"State": 1}
+        await self.ctrl_device_async(self.iot_device, cmd, json_data)
