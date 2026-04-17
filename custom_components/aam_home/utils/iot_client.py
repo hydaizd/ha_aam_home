@@ -80,7 +80,7 @@ class IoTClient:
         self._device_list = await self._http.get_devices_async()
 
     @property
-    def device_list(self) -> dict:
+    def device_list(self) -> dict[str, dict]:
         return self._device_list
 
     async def ctrl_device_async(self, cmd: str, mid_bind_id: str, endpoint: str, group_id: str,
