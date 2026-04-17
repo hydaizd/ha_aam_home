@@ -58,7 +58,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         )
         iot_devices: list[IoTDevice] = []
         for mid_bind_id, info in iot_client.device_list.items():
-            _LOGGER.warning('device, %s', **info)
+            _LOGGER.warning('mid_bind_id, %s', 'device, %s', mid_bind_id, *info)
             device: IoTDevice = IoTDevice(
                 iot_client=iot_client,
                 device_info={
