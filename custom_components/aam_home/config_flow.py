@@ -107,7 +107,7 @@ class AamHomeConfigFlow(ConfigFlow, domain=DOMAIN):
     async def __show_auth_config_form(self, reason: str):
         """显示认证配置表单."""
         return self.async_show_form(
-            step_id="auth_config",
+            step_id="user",
             data_schema=vol.Schema({
                 vol.Required(CONF_HOST, default=""): str,
                 vol.Required(CONF_USERNAME, default="admin"): str,
