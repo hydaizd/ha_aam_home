@@ -3,7 +3,7 @@ from typing import Any
 
 from homeassistant.helpers.entity import Entity
 
-from iot_client import IoTClient, IoTClientError
+from .iot_client import IoTClient, IoTClientError
 
 
 class IoTDevice:
