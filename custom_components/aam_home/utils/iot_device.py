@@ -1,9 +1,11 @@
 # -*- coding: utf-8 -*-
+import asyncio
 from typing import Any, Optional
 
 from homeassistant.helpers.entity import Entity
 
 from .iot_client import IoTClient, IoTClientError
+from ..const import DOMAIN
 
 
 class IoTDevice:
@@ -27,6 +29,7 @@ class IoTDevice:
         self._mid_bind_id = device_info.get('midBindId', '')
         self._name = device_info.get('name', '')
         self._product_key = device_info.get('productKey', '')
+        self._group_id = device_info.get('groupId', '')
         self._endpoint = device_info.get('endpoint', '')
         self._endpoint_name = device_info.get('endpointName', '')
 
@@ -58,14 +61,24 @@ class IoTDevice:
     def endpoint_name(self) -> str:
         return self._endpoint_name
 
+    def gen_prop_entity_id(self, ha_domain: str, mid_bind_id: str, endpoint: str) -> str:
+        return f'{ha_domain}_{mid_bind_id}_{endpoint}'
+
+
 class IoTPropertyEntity(Entity):
     """智能设备属性."""
     iot_device: IoTDevice
+    _main_loop: asyncio.AbstractEventLoop
     _value: Optional[dict]
 
     def __init__(self, iot_device: IoTDevice) -> None:
         self.iot_device = iot_device
         self._value = None
+        self.entity_id = self.iot_device.gen_prop_entity_id(ha_domain=DOMAIN, mid_bind_id=iot_device.mid_bind_id,
+                                                            endpoint=iot_device.endpoint)
+        # Set entity attr
+        self._attr_unique_id = self.entity_id
+        self._attr_name = iot_device.endpoint_name or f"开关 {iot_device.endpoint}"  # 实体名
 
     async def ctrl_device_async(self, cmd: str, json_data: dict) -> bool:
         try:

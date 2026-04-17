@@ -45,15 +45,6 @@ class AamSwitchEntity(IoTPropertyEntity, SwitchEntity):
         """初始化开关."""
         super().__init__(iot_device=iot_device)
 
-        # 设备属性
-        self._attr_name = iot_device.endpoint_name or f"开关 {iot_device.endpoint}"  # 实体名
-        self._attr_unique_id = f"{iot_device.mid_bind_id}_{iot_device.endpoint}"
-        self._attr_device_info = {
-            "identifiers": {(DOMAIN, iot_device.mid_bind_id)},
-            "name": iot_device.name,  # 设备名
-            "manufacturer": "艾美科技",
-        }
-
     @property
     def is_on(self) -> bool:
         """开/关 状态."""
