@@ -25,7 +25,7 @@ class IoTClient:
     _entry_id: str
     _entry_data: dict
     _host: str
-    # MIoT oauth client
+    # IoT oauth client
     _auth: Optional[IoTAuthClient]
     # IoT http client
     _http: Optional[IoTHttpClient]
@@ -125,10 +125,18 @@ async def get_iot_instance_async(
     if not loop:
         raise IoTClientError('loop is None')
 
+    # IoT storage
+    storage: Optional[IoTStorage] = hass.data[DOMAIN].get('iot_storage', None)
+    if not storage:
+        storage = IoTStorage(root_path=entry_data['storage_path'], loop=loop)
+        hass.data[DOMAIN]['iot_storage'] = storage
+        _LOGGER.info('create iot_storage instance')
+
     # IoT client
     iot_client = IoTClient(
         entry_id=entry_id,
         entry_data=entry_data,
+        storage=storage,
         loop=loop
     )
     iot_client.persistent_notify = persistent_notify
