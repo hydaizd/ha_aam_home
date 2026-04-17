@@ -135,7 +135,7 @@ class AamHomeConfigFlow(ConfigFlow, domain=DOMAIN):
         try:
             # Save auth_info
             if not (await self._iot_storage.update_user_config_async(
-                    username=self._username, host=self._host, config={
+                    uname=self._username, host=self._host, config={
                         'auth_info': self._auth_info
                     })):
                 raise IoTError('iot_storage.update_user_config_async error')
