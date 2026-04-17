@@ -45,6 +45,8 @@ class AamSwitchEntity(IoTPropertyEntity, SwitchEntity):
     @property
     def is_on(self) -> bool:
         """开/关 状态."""
+        if self._value is None:
+            return False
         return self._value.get("State", 0) == 1
 
     async def async_turn_on(self, **kwargs: Any) -> None:
