@@ -30,9 +30,11 @@ async def async_setup_entry(
     for iot_device in device_list:
         _LOGGER.warning('device product_key: %s', iot_device.product_key)
         if iot_device.product_key in ["7504"]:
+            _LOGGER.warning('------device2 product_key: %s', iot_device.product_key)
             new_entities.append(AamSwitchEntity(iot_device=iot_device))
 
     if new_entities:
+        _LOGGER.warning('调用 async_add_entities 添加实体')
         async_add_entities(new_entities)
 
 
