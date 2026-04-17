@@ -62,7 +62,7 @@ class IoTDevice:
         return self._endpoint_name
 
     def gen_prop_entity_id(self, ha_domain: str, mid_bind_id: str, endpoint: str) -> str:
-        return f'{ha_domain}_{mid_bind_id}_{endpoint}'
+        return f'{ha_domain}.{mid_bind_id}_{endpoint}'
 
 
 class IoTPropertyEntity(Entity):
