@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from typing import Any
+from typing import Any, Optional
 
 from homeassistant.helpers.entity import Entity
 
@@ -56,10 +56,11 @@ class IoTDevice:
 class IoTPropertyEntity(Entity):
     """智能设备属性."""
     iot_device: IoTDevice
-    _value: dict
+    _value: Optional[dict]
 
     def __init__(self, iot_device: IoTDevice) -> None:
         self.iot_device = iot_device
+        self._value = None
 
     async def ctrl_device_async(self, cmd: str, json_data: dict) -> bool:
         try:
