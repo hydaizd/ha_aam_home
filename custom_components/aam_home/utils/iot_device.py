@@ -18,6 +18,7 @@ class IoTDevice:
     _product_key: str
     _endpoint: str
     _group_id: str
+    _endpoint_name: str
 
     def __init__(self, iot_client: IoTClient, device_info: dict[str, Any]) -> None:
         self.iot_client = iot_client
@@ -27,6 +28,7 @@ class IoTDevice:
         self._name = device_info.get('name', '')
         self._product_key = device_info.get('productKey', '')
         self._endpoint = device_info.get('endpoint', '')
+        self._endpoint_name = device_info.get('endpointName', '')
 
     @property
     def online(self) -> bool:
@@ -52,6 +54,9 @@ class IoTDevice:
     def group_id(self) -> str:
         return self._group_id
 
+    @property
+    def endpoint_name(self) -> str:
+        return self._endpoint_name
 
 class IoTPropertyEntity(Entity):
     """智能设备属性."""
