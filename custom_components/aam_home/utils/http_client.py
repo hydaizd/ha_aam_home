@@ -98,7 +98,7 @@ class IoTHttpClient:
     def __api_request_headers(self) -> dict:
         return {
             'Content-Type': 'application/json',
-            'Authorization': f'Bearer{self._access_token}',
+            'Authorization': f'{self._access_token}',
         }
 
     # pylint: disable=unused-private-member
