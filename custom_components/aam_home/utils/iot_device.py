@@ -17,6 +17,7 @@ class IoTDevice:
     _name: str
     _product_key: str
     _endpoint: str
+    _group_id: str
 
     def __init__(self, iot_client: IoTClient, device_info: dict[str, Any]) -> None:
         self.iot_client = iot_client
@@ -47,6 +48,10 @@ class IoTDevice:
     def endpoint(self) -> str:
         return self._endpoint
 
+    @property
+    def group_id(self) -> str:
+        return self._group_id
+
 
 class IoTPropertyEntity(Entity):
     """智能设备属性."""
@@ -56,15 +61,17 @@ class IoTPropertyEntity(Entity):
     def __init__(self, iot_device: IoTDevice) -> None:
         self.iot_device = iot_device
 
-    async def ctrl_device_async(self, iot_device: IoTDevice, cmd: str, json_data: Any) -> bool:
+    async def ctrl_device_async(self, cmd: str, json_data: Any) -> bool:
         try:
             await self.iot_device.iot_client.ctrl_device_async(
-                iot_device=iot_device,
                 cmd=cmd,
+                mid_bind_id=self.iot_device.mid_bind_id,
+                endpoint=self.iot_device.endpoint,
+                group_id=self.iot_device.group_id,
                 json_data=json_data,
             )
         except IoTClientError as e:
-            raise RuntimeError(f'{e}, {iot_device.mid_bind_id}, {iot_device.name}') from e
+            raise RuntimeError(f'{e}, {self.iot_device.mid_bind_id}, {self.iot_device.name}') from e
         self._value = json_data
         self.async_write_ha_state()
         return True

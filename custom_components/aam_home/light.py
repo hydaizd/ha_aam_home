@@ -60,10 +60,10 @@ class AamLightEntity(IoTPropertyEntity, LightEntity):
             json_data["RGB"] = rgb_color
 
         cmd = ''
-        await self.ctrl_device_async(self.iot_device, cmd, json_data)
+        await self.ctrl_device_async(cmd, json_data)
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """关闭灯光."""
         cmd = ''
         json_data = {"State": 0}
-        await self.ctrl_device_async(self.iot_device, cmd, json_data)
+        await self.ctrl_device_async(cmd, json_data)

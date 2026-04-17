@@ -6,7 +6,6 @@ from typing import Optional, Callable
 from homeassistant.core import HomeAssistant
 
 from .http_client import IoTHttpClient, IoTAuthClient
-from .iot_device import IoTDevice
 from .iot_error import IoTClientError
 from ..const import DOMAIN
 
@@ -70,20 +69,21 @@ class IoTClient:
     def device_list(self) -> dict:
         return self._device_list
 
-    async def ctrl_device_async(self, iot_device: IoTDevice, cmd: str, json_data: dict) -> bool:
+    async def ctrl_device_async(self, cmd: str, mid_bind_id: str, endpoint: str, group_id: str,
+                                json_data: dict) -> bool:
         """设备控制."""
-        if iot_device.mid_bind_id not in self._device_list:
-            raise IoTClientError(f'device not exist, {iot_device.mid_bind_id}')
+        if mid_bind_id not in self._device_list:
+            raise IoTClientError(f'device not exist, {mid_bind_id}')
 
         req_data = {
             "cmd": cmd,
-            "endpointId": iot_device.endpoint,
-            "groupId": iot_device.endpoint,
+            "endpointId": endpoint,
+            "groupId": group_id,
             "jsonData": json_data,
-            "midBindId": iot_device.mid_bind_id,
+            "midBindId": mid_bind_id,
         }
         result = await self._http.ctrl_device_async(data=req_data)
-        _LOGGER.debug('ctrl: %s, %s.%s, %s -> %s', cmd, iot_device.mid_bind_id, iot_device.endpoint, json_data, result)
+        _LOGGER.debug('ctrl: %s, %s.%s, %s -> %s', cmd, mid_bind_id, endpoint, json_data, result)
         return True
 
 

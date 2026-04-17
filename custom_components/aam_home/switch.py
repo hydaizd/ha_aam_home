@@ -51,13 +51,13 @@ class AamSwitchEntity(IoTPropertyEntity, SwitchEntity):
         """打开开关."""
         cmd = "set_state"
         json_data = {"State": 1}
-        await self.ctrl_device_async(self.iot_device, cmd, json_data)
+        await self.ctrl_device_async(cmd, json_data)
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """关闭开关."""
         cmd = "set_state"
         json_data = {"State": 0}
-        await self.ctrl_device_async(self.iot_device, cmd, json_data)
+        await self.ctrl_device_async(cmd, json_data)
 
     async def async_toggle(self, **kwargs: Any) -> None:
         """切换开关."""
@@ -66,4 +66,4 @@ class AamSwitchEntity(IoTPropertyEntity, SwitchEntity):
             json_data = {"State": 0}
         else:
             json_data = {"State": 1}
-        await self.ctrl_device_async(self.iot_device, cmd, json_data)
+        await self.ctrl_device_async(cmd, json_data)
