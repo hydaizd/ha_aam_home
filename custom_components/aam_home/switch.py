@@ -25,6 +25,8 @@ async def async_setup_entry(
     """设置开关平台."""
     device_list: list[IoTDevice] = hass.data[DOMAIN]['devices'][config_entry.entry_id]
 
+    _LOGGER.warning("device_list, %s", device_list)
+
     # 创建开关实体
     new_entities = []
     for iot_device in device_list:
