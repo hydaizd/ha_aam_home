@@ -2,6 +2,7 @@
 import asyncio
 from typing import Any, Optional
 
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity import Entity
 
 from .iot_client import IoTClient, IoTClientError
@@ -17,6 +18,9 @@ class IoTDevice:
 
     _mid_bind_id: str
     _name: str
+    _model: str
+    _manufacturer: str
+    _fw_version: str
     _product_key: str
     _endpoint: str
     _group_id: str
@@ -32,6 +36,10 @@ class IoTDevice:
         self._group_id = device_info.get('groupId', '')
         self._endpoint = device_info.get('endpoint', '')
         self._endpoint_name = device_info.get('endpointName', '')
+
+        self._model = device_info.get('skuId', '')
+        self._manufacturer = device_info.get('manufacturer', '艾美科技')
+        self._fw_version = device_info.get('version', '')
 
     @property
     def online(self) -> bool:
@@ -60,6 +68,23 @@ class IoTDevice:
     @property
     def endpoint_name(self) -> str:
         return self._endpoint_name
+
+    @property
+    def model(self) -> str:
+        return self._model
+
+    @property
+    def device_info(self) -> DeviceInfo:
+        """information about this entity/device."""
+        return DeviceInfo(
+            identifiers={(DOMAIN, self.did_tag)},
+            name=self._name,
+            sw_version=self._fw_version,
+            model=self._model,
+            manufacturer=self._manufacturer,
+            # suggested_area=self._suggested_area,
+            # configuration_url=('')
+        )
 
     def gen_prop_entity_id(self, ha_domain: str, mid_bind_id: str, endpoint: str) -> str:
         return f'{ha_domain}.{mid_bind_id}_{endpoint}'
