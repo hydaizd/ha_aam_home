@@ -162,7 +162,7 @@ class IoTHttpClient:
             mid_bind_id = item.get("midBindId", "")
             ep = item.get('endpoint', '')
             if mid_bind_id != "" and ep != '':
-                device_list.setdefault(mid_bind_id, {}).setdefault('sub_devices', {})[ep] = item
+                device_list[f'{mid_bind_id}_{ep}'] = item
         return device_list
 
     async def ctrl_device_async(self, data: dict) -> None:

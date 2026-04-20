@@ -90,8 +90,8 @@ class IoTClient:
     async def ctrl_device_async(self, cmd: str, mid_bind_id: str, endpoint: str, group_id: str,
                                 json_data: dict) -> bool:
         """设备控制."""
-        if mid_bind_id not in self._device_list:
-            raise IoTClientError(f'device not exist, {mid_bind_id}')
+        if f'{mid_bind_id}_{endpoint}' not in self._device_list:
+            raise IoTClientError(f'device not exist, {mid_bind_id}_{endpoint}')
 
         req_data = {
             "cmd": cmd,
