@@ -77,8 +77,12 @@ class IoTPropertyEntity(Entity):
         self.entity_id = self.iot_device.gen_prop_entity_id(ha_domain=DOMAIN, mid_bind_id=iot_device.mid_bind_id,
                                                             endpoint=iot_device.endpoint)
         # Set entity attr
-        self._attr_unique_id = self.entity_id
+        self._attr_unique_id = self.entity_id  # 实体唯一标识
+        self._attr_should_poll = False
+        self._attr_has_entity_name = True  # 是否有实体名称
+        self._attr_entity_category = 'switch'  # 实体分类
         self._attr_name = iot_device.endpoint_name or f"开关 {iot_device.endpoint}"  # 实体名
+        self._attr_available = iot_device.online  # 实体当前是否可用
 
     async def ctrl_device_async(self, cmd: str, json_data: dict) -> bool:
         try:
