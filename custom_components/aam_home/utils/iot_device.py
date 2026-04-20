@@ -108,6 +108,10 @@ class IoTPropertyEntity(Entity):
         self._attr_name = iot_device.endpoint_name or f"开关 {iot_device.endpoint}"  # 实体名
         self._attr_available = iot_device.online  # 实体当前是否可用
 
+    @property
+    def device_info(self) -> Optional[DeviceInfo]:
+        return self.iot_device.device_info
+
     async def ctrl_device_async(self, cmd: str, json_data: dict) -> bool:
         try:
             await self.iot_device.iot_client.ctrl_device_async(
