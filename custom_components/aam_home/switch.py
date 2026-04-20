@@ -29,7 +29,7 @@ async def async_setup_entry(
     new_entities = []
     for iot_device in device_list:
         _LOGGER.warning('device product_key: %s', iot_device.product_key)
-        if iot_device.product_key in ["7504"]:
+        if iot_device.product_key in ["7504", "2668"]:
             _LOGGER.warning('------device2 product_key: %s', iot_device.product_key)
             new_entities.append(AamSwitchEntity(iot_device=iot_device))
 
