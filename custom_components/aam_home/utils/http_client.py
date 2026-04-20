@@ -157,13 +157,12 @@ class IoTHttpClient:
         res_obj = res_obj['data']
 
         # Convert to {mid_bind_id: <info>}
-        device_list = {}
+        device_list: dict[str, dict] = {}
         for item in res_obj.get("items", []):
             mid_bind_id = item.get("midBindId", "")
             ep = item.get('endpoint', '')
             if mid_bind_id != "" and ep != '':
-                device_list[mid_bind_id].setdefault('sub_devices', {})
-                device_list[mid_bind_id]['sub_devices'][ep] = item
+                device_list.setdefault(mid_bind_id, {}).setdefault('sub_devices', {})[ep] = item
         return device_list
 
     async def ctrl_device_async(self, data: dict) -> None:
