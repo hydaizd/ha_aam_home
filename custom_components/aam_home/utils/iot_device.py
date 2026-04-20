@@ -5,6 +5,7 @@ from typing import Any, Optional
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity import Entity
 
+from .common import slugify_did
 from .iot_client import IoTClient, IoTClientError
 from ..const import DOMAIN
 
@@ -72,6 +73,10 @@ class IoTDevice:
     @property
     def model(self) -> str:
         return self._model
+
+    @property
+    def did_tag(self) -> str:
+        return slugify_did(host=self.iot_client.host, mid_bind_id=self._mid_bind_id)
 
     @property
     def device_info(self) -> DeviceInfo:
