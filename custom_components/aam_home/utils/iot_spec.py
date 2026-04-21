@@ -48,9 +48,11 @@ class IoTSpecValueList:
 class _IoTSpecBase:
     """IoT 规范基类."""
     description: str
+    name: str
 
     def __init__(self, spec: dict) -> None:
         self.description = spec['description']
+        self.name = spec.get('name', 'aam')
 
 
 class IoTSpecProperty(_IoTSpecBase):

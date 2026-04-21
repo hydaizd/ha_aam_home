@@ -5,7 +5,7 @@ from typing import Any, Optional
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity import Entity
 
-from .common import slugify_did
+from .common import slugify_did, slugify_name
 from .iot_client import IoTClient, IoTClientError
 from .iot_spec import IoTSpecValueList, IoTSpecProperty
 from ..const import DOMAIN
@@ -92,8 +92,8 @@ class IoTDevice:
             # configuration_url=('')
         )
 
-    def gen_prop_entity_id(self, ha_domain: str, mid_bind_id: str, endpoint: str) -> str:
-        return f'{ha_domain}.{mid_bind_id}_{endpoint}'
+    def gen_prop_entity_id(self, ha_domain: str, spec_name: str, mid_bind_id: str, endpoint: str) -> str:
+        return f'{ha_domain}.{slugify_name(spec_name)}_{mid_bind_id}_{endpoint}'
 
 
 class IoTPropertyEntity(Entity):
@@ -111,6 +111,7 @@ class IoTPropertyEntity(Entity):
         self._value = None
         self.entity_id = self.iot_device.gen_prop_entity_id(
             ha_domain=DOMAIN,
+            spec_name=spec.name,
             mid_bind_id=iot_device.mid_bind_id,
             endpoint=iot_device.endpoint
         )

@@ -27,6 +27,7 @@ async def async_setup_entry(
         if iot_device.product_key in ["2668"]:
             spec: IoTSpecProperty = IoTSpecProperty(
                 spec={
+                    'name': f'select_{iot_device.endpoint} ',
                     'description': '默认上电状态',
                 },
                 value_list=[
