@@ -31,7 +31,7 @@ async def async_setup_entry(
             spec: IoTSpecProperty = IoTSpecProperty(
                 spec={
                     'name': f'switch_{iot_device.endpoint} ',
-                    'description': f'开关 {iot_device.endpoint_name}',
+                    'description': '',
                 },
                 value_list=[]
             )
