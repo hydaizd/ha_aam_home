@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from typing import Any, Optional
+from typing import Any, Optional, Union
 
 from .iot_error import IoTSpecError
 
@@ -67,8 +67,19 @@ class IoTSpecProperty(_IoTSpecBase):
 
     def __init__(self, spec: dict, value_list: Optional[list[dict]] = None) -> None:
         super().__init__(spec=spec)
-        self._value_list = value_list
+        self.value_list = value_list
 
     @property
     def value_list(self) -> Optional[IoTSpecValueList]:
         return self._value_list
+
+    @value_list.setter
+    def value_list(self, value: Union[list[dict], IoTSpecValueList,
+    None]) -> None:
+        if not value:
+            self._value_list = None
+            return
+        if isinstance(value, list):
+            self._value_list = IoTSpecValueList(value_list=value)
+        elif isinstance(value, IoTSpecValueList):
+            self._value_list = value
