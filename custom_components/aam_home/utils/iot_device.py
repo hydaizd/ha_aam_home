@@ -126,6 +126,11 @@ class IoTPropertyEntity(Entity):
     def device_info(self) -> Optional[DeviceInfo]:
         return self.iot_device.device_info
 
+    def get_vlist_value(self, description: str) -> Any:
+        if not self._value_list:
+            return None
+        return self._value_list.get_value_by_description(description)
+
     async def ctrl_device_async(self, cmd: str, json_data: dict) -> bool:
         try:
             await self.iot_device.iot_client.ctrl_device_async(

@@ -44,6 +44,12 @@ class IoTSpecValueList:
         for item in value_list:
             self.items.append(IoTSpecValueListItem(item))
 
+    def get_value_by_description(self, description: str) -> Any:
+        for item in self.items:
+            if item.description == description:
+                return item.value
+        return None
+
 
 class _IoTSpecBase:
     """IoT 规范基类."""
