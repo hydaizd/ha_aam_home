@@ -30,7 +30,7 @@ async def async_setup_entry(
             _LOGGER.warning('------device2 product_key: %s', iot_device.product_key)
             spec: IoTSpecProperty = IoTSpecProperty(
                 spec={
-                    'name': f'switch_{iot_device.endpoint} ',
+                    'name': f'{iot_device.endpoint} ',
                     'description': '',
                 },
                 value_list=[]

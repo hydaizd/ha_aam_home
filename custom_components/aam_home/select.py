@@ -32,17 +32,17 @@ async def async_setup_entry(
                 },
                 value_list=[
                     {
-                        'name': 'EpWorkMode',
+                        'name': 'EpWorkMode1',
                         'value': 64,
                         'description': '通电打开',
                     },
                     {
-                        'name': 'EpWorkMode',
+                        'name': 'EpWorkMode2',
                         'value': 96,
                         'description': '通电关闭',
                     },
                     {
-                        'name': 'EpWorkMode',
+                        'name': 'EpWorkMode3',
                         'value': 160,
                         'description': '保持断电前状态',
                     }
