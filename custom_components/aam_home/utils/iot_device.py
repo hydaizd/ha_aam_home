@@ -126,6 +126,11 @@ class IoTPropertyEntity(Entity):
     def device_info(self) -> Optional[DeviceInfo]:
         return self.iot_device.device_info
 
+    def get_vlist_description(self, value: Any) -> Optional[str]:
+        if not self._value_list:
+            return None
+        return self._value_list.get_description_by_value(value)
+
     def get_vlist_value(self, description: str) -> Any:
         if not self._value_list:
             return None

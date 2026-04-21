@@ -50,6 +50,12 @@ class IoTSpecValueList:
                 return item.value
         return None
 
+    def get_description_by_value(self, value: Any) -> Optional[str]:
+        for item in self.items:
+            if item.value == value:
+                return item.description
+        return None
+
 
 class _IoTSpecBase:
     """IoT 规范基类."""
