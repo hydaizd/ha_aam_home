@@ -55,8 +55,6 @@ async def async_setup_entry(
 
 
 class AamSelectEntity(IoTPropertyEntity, SelectEntity):
-    """Select entities for Xiaomi Home."""
-
     def __init__(self, iot_device: IoTDevice, spec: IoTSpecProperty) -> None:
         """Initialize the Select."""
         super().__init__(iot_device=iot_device, spec=spec)

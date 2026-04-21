@@ -67,4 +67,8 @@ class IoTSpecProperty(_IoTSpecBase):
 
     def __init__(self, spec: dict, value_list: Optional[list[dict]] = None) -> None:
         super().__init__(spec=spec)
-        self.value_list = value_list
+        self._value_list = value_list
+
+    @property
+    def value_list(self) -> Optional[IoTSpecValueList]:
+        return self._value_list
