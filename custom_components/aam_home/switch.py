@@ -9,7 +9,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
 from .utils.iot_device import IoTPropertyEntity, IoTDevice
-from .utils.iot_spec import IoTSpecProperty, IoTSpecValue
+from .utils.iot_spec import IoTSpecProperty
 
 _LOGGER = logging.getLogger(__name__)
 
