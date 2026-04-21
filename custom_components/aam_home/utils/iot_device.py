@@ -7,6 +7,7 @@ from homeassistant.helpers.entity import Entity
 
 from .common import slugify_did
 from .iot_client import IoTClient, IoTClientError
+from .iot_spec import IoTSpecValueList, IoTSpecProperty
 from ..const import DOMAIN
 
 
@@ -98,11 +99,15 @@ class IoTDevice:
 class IoTPropertyEntity(Entity):
     """智能设备属性."""
     iot_device: IoTDevice
+    spec: IoTSpecProperty
     _main_loop: asyncio.AbstractEventLoop
+    _value_list: Optional[IoTSpecValueList]
     _value: Optional[dict]
 
-    def __init__(self, iot_device: IoTDevice) -> None:
+    def __init__(self, iot_device: IoTDevice, spec: IoTSpecProperty) -> None:
         self.iot_device = iot_device
+        self.spec = spec
+        self._value_list = spec.value_list
         self._value = None
         self.entity_id = self.iot_device.gen_prop_entity_id(ha_domain=DOMAIN, mid_bind_id=iot_device.mid_bind_id,
                                                             endpoint=iot_device.endpoint)

@@ -5,6 +5,7 @@ NAME: str = "艾美智空间"
 # 　定义集成支持的平台
 SUPPORTED_PLATFORMS: list = [
     "switch",
+    "select"
 ]
 
 # 配置键

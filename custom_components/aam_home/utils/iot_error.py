@@ -40,3 +40,7 @@ class IoTClientError(IoTError):
 
 class IoTConfigError(IoTError):
     ...
+
+
+class IoTSpecError(IoTError):
+    ...
