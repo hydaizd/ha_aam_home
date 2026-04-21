@@ -33,18 +33,7 @@ async def async_setup_entry(
                     'name': f'switch_{iot_device.endpoint} ',
                     'description': iot_device.endpoint_name,
                 },
-                value_list=[
-                    {
-                        'name': 'State',
-                        'value': 1,
-                        'description': '开启',
-                    },
-                    {
-                        'name': 'State',
-                        'value': 0,
-                        'description': '关闭',
-                    },
-                ]
+                value_list=[]
             )
             new_entities.append(AamSwitchEntity(iot_device=iot_device, spec=spec))
 
