@@ -69,8 +69,6 @@ class AamSelectEntity(IoTPropertyEntity, SelectEntity):
         json_data = {"EpWorkMode": self.get_vlist_value(description=option)}
         await self.ctrl_device_async(cmd, json_data)
 
-        # await self.set_property_async(value=self.get_vlist_value(description=option))
-
     @property
     def current_option(self) -> Optional[str]:
         """Return the current selected option."""
