@@ -119,7 +119,7 @@ class IoTPropertyEntity(Entity):
         self._attr_unique_id = self.entity_id  # 实体唯一标识
         self._attr_should_poll = False
         self._attr_has_entity_name = True  # 是否有实体名称
-        self._attr_name = iot_device.endpoint_name or f"开关 {iot_device.endpoint}"  # 实体名
+        self._attr_name = spec.description or f"开关 {iot_device.endpoint}"  # 实体名
         self._attr_available = iot_device.online  # 实体当前是否可用
 
     @property
