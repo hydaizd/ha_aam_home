@@ -9,6 +9,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
 from .utils.iot_device import IoTPropertyEntity, IoTDevice
+from .utils.iot_spec import IoTSpecProperty, IoTSpecValue
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -27,7 +28,24 @@ async def async_setup_entry(
         _LOGGER.warning('device product_key: %s', iot_device.product_key)
         if iot_device.product_key in ["7504", "2668"]:
             _LOGGER.warning('------device2 product_key: %s', iot_device.product_key)
-            new_entities.append(AamSwitchEntity(iot_device=iot_device))
+            spec: IoTSpecProperty = IoTSpecProperty(
+                spec={
+                    'description': iot_device.endpoint_name,
+                },
+                value_list=[
+                    {
+                        'name': 'State',
+                        'value': 1,
+                        'description': '开启',
+                    },
+                    {
+                        'name': 'State',
+                        'value': 0,
+                        'description': '关闭',
+                    },
+                ]
+            )
+            new_entities.append(AamSwitchEntity(iot_device=iot_device, spec=spec))
 
     if new_entities:
         _LOGGER.warning('调用 async_add_entities 添加实体')
@@ -37,9 +55,9 @@ async def async_setup_entry(
 class AamSwitchEntity(IoTPropertyEntity, SwitchEntity):
     """表示智空间盒子开关实体."""
 
-    def __init__(self, iot_device: IoTDevice) -> None:
+    def __init__(self, iot_device: IoTDevice, spec: IoTSpecProperty) -> None:
         """初始化开关."""
-        super().__init__(iot_device=iot_device)
+        super().__init__(iot_device=iot_device, spec=spec)
 
     @property
     def is_on(self) -> bool:

@@ -109,8 +109,11 @@ class IoTPropertyEntity(Entity):
         self.spec = spec
         self._value_list = spec.value_list
         self._value = None
-        self.entity_id = self.iot_device.gen_prop_entity_id(ha_domain=DOMAIN, mid_bind_id=iot_device.mid_bind_id,
-                                                            endpoint=iot_device.endpoint)
+        self.entity_id = self.iot_device.gen_prop_entity_id(
+            ha_domain=DOMAIN,
+            mid_bind_id=iot_device.mid_bind_id,
+            endpoint=iot_device.endpoint
+        )
         # Set entity attr
         self._attr_unique_id = self.entity_id  # 实体唯一标识
         self._attr_should_poll = False
