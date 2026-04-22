@@ -89,3 +89,19 @@ class IoTSpecProperty(_IoTSpecBase):
             self._value_list = IoTSpecValueList(value_list=value)
         elif isinstance(value, IoTSpecValueList):
             self._value_list = value
+
+
+class IoTSpecAction(_IoTSpecBase):
+    """MIoT SPEC action class."""
+    in_: list[IoTSpecProperty]
+    out: list[IoTSpecProperty]
+
+    def __init__(
+            self,
+            spec: dict,
+            in_: Optional[list[IoTSpecProperty]] = None,
+            out: Optional[list[IoTSpecProperty]] = None
+    ) -> None:
+        super().__init__(spec=spec)
+        self.in_ = in_ or []
+        self.out = out or []

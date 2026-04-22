@@ -7,7 +7,8 @@ from homeassistant.helpers.entity import Entity
 
 from .common import slugify_did, slugify_name
 from .iot_client import IoTClient, IoTClientError
-from .iot_spec import IoTSpecValueList, IoTSpecProperty
+from .iot_error import IoTDeviceError
+from .iot_spec import IoTSpecValueList, IoTSpecProperty, IoTSpecAction
 from ..const import DOMAIN
 
 
@@ -82,8 +83,9 @@ class IoTDevice:
 
     @property
     def device_info(self) -> DeviceInfo:
-        """information about this entity/device."""
+        """设备信息."""
         return DeviceInfo(
+            # 设备唯一标识
             identifiers={(DOMAIN, self.did_tag)},
             name=self._name,
             sw_version=self._fw_version,
@@ -94,6 +96,9 @@ class IoTDevice:
         )
 
     def gen_prop_entity_id(self, ha_domain: str, spec_name: str, mid_bind_id: str, endpoint: str) -> str:
+        return f'{ha_domain}.{slugify_name(spec_name)}_{mid_bind_id}_{endpoint}'
+
+    def gen_action_entity_id(self, ha_domain: str, spec_name: str, mid_bind_id: str, endpoint: str) -> str:
         return f'{ha_domain}.{slugify_name(spec_name)}_{mid_bind_id}_{endpoint}'
 
 
@@ -154,3 +159,32 @@ class IoTPropertyEntity(Entity):
         # 立即更新UI
         self.async_write_ha_state()
         return True
+
+
+class IoTActionEntity(Entity):
+    """智能设备操作."""
+    iot_device: IoTDevice
+    spec: IoTSpecAction
+    _main_loop: asyncio.AbstractEventLoop
+    _value_list: Optional[IoTSpecValueList]
+    _value: Any
+
+    def __init__(self, iot_device: IoTDevice, spec: IoTSpecAction) -> None:
+        if iot_device is None or spec is None:
+            raise IoTDeviceError('init error, invalid params')
+        self.iot_device = iot_device
+        self.spec = spec
+        self._main_loop = iot_device.iot_client.main_loop
+        # Gen entity_id
+        self.entity_id = self.iot_device.gen_action_entity_id(
+            ha_domain=DOMAIN,
+            spec_name=spec.name,
+            mid_bind_id=iot_device.mid_bind_id,
+            endpoint=iot_device.endpoint
+        )
+        # Set entity attr
+        self._attr_unique_id = self.entity_id
+        self._attr_should_poll = False
+        self._attr_has_entity_name = True
+        self._attr_name = f'{iot_device.endpoint_name}  {spec.description}'  # 实体名
+        self._attr_available = iot_device.online

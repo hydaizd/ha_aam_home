@@ -56,6 +56,10 @@ class IoTClient:
     async def de_init_async(self) -> None:
         _LOGGER.info('de_init_async')
 
+    @property
+    def main_loop(self) -> asyncio.AbstractEventLoop:
+        return self._main_loop
+
     async def init_async(self) -> None:
         """Init IoT client."""
         # Load user config and check

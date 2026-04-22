@@ -44,3 +44,7 @@ class IoTConfigError(IoTError):
 
 class IoTSpecError(IoTError):
     ...
+
+
+class IoTDeviceError(IoTError):
+    ...

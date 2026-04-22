@@ -25,9 +25,7 @@ async def async_setup_entry(
     # 创建开关实体
     new_entities = []
     for iot_device in device_list:
-        _LOGGER.warning('device product_key: %s', iot_device.product_key)
         if iot_device.product_key in ["7504", "2668"]:
-            _LOGGER.warning('------device2 product_key: %s', iot_device.product_key)
             spec: IoTSpecProperty = IoTSpecProperty(
                 spec={
                     'name': f'{iot_device.endpoint} ',
@@ -38,7 +36,6 @@ async def async_setup_entry(
             new_entities.append(AamSwitchEntity(iot_device=iot_device, spec=spec))
 
     if new_entities:
-        _LOGGER.warning('调用 async_add_entities 添加实体')
         async_add_entities(new_entities)
 
 
