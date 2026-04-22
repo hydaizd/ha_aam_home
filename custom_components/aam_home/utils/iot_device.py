@@ -188,3 +188,7 @@ class IoTActionEntity(Entity):
         self._attr_has_entity_name = True
         self._attr_name = f'{iot_device.endpoint_name}  {spec.description}'  # 实体名
         self._attr_available = iot_device.online
+
+    @property
+    def device_info(self) -> Optional[DeviceInfo]:
+        return self.iot_device.device_info
