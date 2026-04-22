@@ -31,6 +31,7 @@ class IoTDevice:
     def __init__(self, iot_client: IoTClient, device_info: dict[str, Any]) -> None:
         self.iot_client = iot_client
 
+        # 当设备不在线时会显示不可用
         self._online = device_info.get('onlineStatus', 0) == 1
         self._mid_bind_id = device_info.get('midBindId', '')
         self._name = device_info.get('name', '')
@@ -102,7 +103,7 @@ class IoTPropertyEntity(Entity):
     spec: IoTSpecProperty
     _main_loop: asyncio.AbstractEventLoop
     _value_list: Optional[IoTSpecValueList]
-    _value: Optional[dict]
+    _value: Any
 
     def __init__(self, iot_device: IoTDevice, spec: IoTSpecProperty) -> None:
         self.iot_device = iot_device
@@ -136,7 +137,7 @@ class IoTPropertyEntity(Entity):
             return None
         return self._value_list.get_value_by_description(description)
 
-    async def ctrl_device_async(self, cmd: str, json_data: dict) -> bool:
+    async def ctrl_device_async(self, cmd: str, value: any, json_data: dict) -> bool:
         try:
             await self.iot_device.iot_client.ctrl_device_async(
                 cmd=cmd,
@@ -147,6 +148,7 @@ class IoTPropertyEntity(Entity):
             )
         except IoTClientError as e:
             raise RuntimeError(f'{e}, {self.iot_device.mid_bind_id}, {self.iot_device.name}') from e
-        self._value = json_data
+        self._value = value
+        # 立即更新UI
         self.async_write_ha_state()
         return True

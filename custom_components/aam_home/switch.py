@@ -52,27 +52,19 @@ class AamSwitchEntity(IoTPropertyEntity, SwitchEntity):
     @property
     def is_on(self) -> bool:
         """开/关 状态."""
-        if self._value is None:
-            return False
-        return self._value.get("State", 0) == 1
+        return self._value == 1
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """打开开关."""
-        cmd = "set_state"
-        json_data = {"State": 1}
-        await self.ctrl_device_async(cmd, json_data)
+        value = 0
+        await self.ctrl_device_async("set_state", value, {"State": value})
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """关闭开关."""
-        cmd = "set_state"
-        json_data = {"State": 0}
-        await self.ctrl_device_async(cmd, json_data)
+        value = 0
+        await self.ctrl_device_async("set_state", value, {"State": value})
 
     async def async_toggle(self, **kwargs: Any) -> None:
         """切换开关."""
-        cmd = "set_state"
-        if self.is_on:
-            json_data = {"State": 0}
-        else:
-            json_data = {"State": 1}
-        await self.ctrl_device_async(cmd, json_data)
+        value = 0 if self.is_on else 1
+        await self.ctrl_device_async("set_state", value, {"State": value})

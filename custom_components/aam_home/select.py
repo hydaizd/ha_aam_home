@@ -27,22 +27,22 @@ async def async_setup_entry(
         if iot_device.product_key in ["2668"]:
             spec: IoTSpecProperty = IoTSpecProperty(
                 spec={
-                    'name': f'select_{iot_device.endpoint} ',
+                    'name': f'{iot_device.endpoint} ',
                     'description': '默认上电状态',
                 },
                 value_list=[
                     {
-                        'name': 'EpWorkMode1',
+                        'name': 'EpWorkMode',
                         'value': 64,
                         'description': '通电打开',
                     },
                     {
-                        'name': 'EpWorkMode2',
+                        'name': 'EpWorkMode',
                         'value': 96,
                         'description': '通电关闭',
                     },
                     {
-                        'name': 'EpWorkMode3',
+                        'name': 'EpWorkMode',
                         'value': 160,
                         'description': '保持断电前状态',
                     }
@@ -63,9 +63,8 @@ class AamSelectEntity(IoTPropertyEntity, SelectEntity):
 
     async def async_select_option(self, option: str) -> None:
         """Change the selected option."""
-        cmd = "aam_socket_ep_workmode"
-        json_data = {"EpWorkMode": self.get_vlist_value(description=option)}
-        await self.ctrl_device_async(cmd, json_data)
+        value = self.get_vlist_value(description=option)
+        await self.ctrl_device_async("aam_socket_ep_workmode", value, {"EpWorkMode": value})
 
     @property
     def current_option(self) -> Optional[str]:
