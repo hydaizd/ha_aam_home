@@ -56,7 +56,7 @@ class AamSwitchEntity(IoTPropertyEntity, SwitchEntity):
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """打开开关."""
-        value = 0
+        value = 1
         await self.ctrl_device_async("set_state", value, {"State": value})
 
     async def async_turn_off(self, **kwargs: Any) -> None:

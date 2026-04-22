@@ -59,6 +59,7 @@ class AamSelectEntity(IoTPropertyEntity, SelectEntity):
         """Initialize the Select."""
         super().__init__(iot_device=iot_device, spec=spec)
         if self._value_list:
+            # 下拉框所有选项
             self._attr_options = self._value_list.descriptions
 
     async def async_select_option(self, option: str) -> None:

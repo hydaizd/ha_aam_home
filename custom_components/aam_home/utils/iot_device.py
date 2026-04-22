@@ -128,11 +128,13 @@ class IoTPropertyEntity(Entity):
         return self.iot_device.device_info
 
     def get_vlist_description(self, value: Any) -> Optional[str]:
+        # 根据值获取描述
         if not self._value_list:
             return None
         return self._value_list.get_description_by_value(value)
 
     def get_vlist_value(self, description: str) -> Any:
+        # 根据描述获取值
         if not self._value_list:
             return None
         return self._value_list.get_value_by_description(description)
