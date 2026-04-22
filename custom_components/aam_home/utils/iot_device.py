@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import asyncio
+import logging
 from typing import Any, Optional
 
 from homeassistant.helpers.entity import DeviceInfo
@@ -10,6 +11,8 @@ from .iot_client import IoTClient, IoTClientError
 from .iot_error import IoTDeviceError
 from .iot_spec import IoTSpecValueList, IoTSpecProperty, IoTSpecAction
 from ..const import DOMAIN
+
+_LOGGER = logging.getLogger(__name__)
 
 
 class IoTDevice:
@@ -192,3 +195,7 @@ class IoTActionEntity(Entity):
     @property
     def device_info(self) -> Optional[DeviceInfo]:
         return self.iot_device.device_info
+
+    async def action_async(self, in_list: Optional[list] = None) -> Optional[list]:
+        _LOGGER.warning(f'action_async, {self.entity_id}, {in_list}')
+        return None
