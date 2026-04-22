@@ -31,8 +31,7 @@ class IoTDevice:
     def __init__(self, iot_client: IoTClient, device_info: dict[str, Any]) -> None:
         self.iot_client = iot_client
 
-        #self._online = device_info.get('onlineStatus', 0) == 1
-        self._online = True
+        self._online = device_info.get('onlineStatus', 0) == 1
         self._mid_bind_id = device_info.get('midBindId', '')
         self._name = device_info.get('name', '')
         self._product_key = device_info.get('productKey', '')
