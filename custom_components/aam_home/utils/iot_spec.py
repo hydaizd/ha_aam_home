@@ -291,26 +291,37 @@ class IoTSpecParser:
         for props in instance.values():
             for property_ in props:
                 prop_info = property_.get('prop', {})
-                details = prop_info.get('details', {})
+                details = property_.get('details', {})
                 for detail in details:
-                    detail['description'] = detail['propName']
-                    detail['name'] = detail['propName']
+                    detail['description'] = detail['paramName']
+                    detail['name'] = detail['paramName']
 
                     # 操作(指令下发设置属性值)
                     if prop_info['propType'] == 2:
+                        value_range = None
+                        value_list = None
+
                         # 枚举类型
-                        value_list = []
                         if detail['aamParamValueType'] in ['enum', 'int_enum']:
+                            value_list = []
                             for value_info in detail.get('enum', []):
                                 value_list.append({
                                     'value': value_info['aamValue'],
                                     'description': value_info['aamKey'],
                                 })
 
+                        # 范围类型
+                        if detail['aamMinValue'] >= 0 and detail['aamMaxValue'] > 0:
+                            value_range = {
+                                'min': detail['aamMinValue'],
+                                'max': detail['aamMaxValue'],
+                            }
+
                         spec_prop: IoTSpecProperty = IoTSpecProperty(
                             spec=detail,
                             format_=detail['aamParamValueType'],
                             value_list=value_list,
+                            value_range=value_range,
                         )
                         spec_instance.properties.append(spec_prop)
                     # 上报
