@@ -311,18 +311,17 @@ class IoTSpecParser:
                     # 操作(指令下发设置属性值)
                     if prop_info['skuTplNo'] == 'switch' and prop_info['aamCmd'] == 'set_state':
                         _LOGGER.warning('propType 2----, %s', prop_info)
+                        prop_info['description'] = prop_info['propName']
+                        prop_info['name'] = prop_info['propName']
+
                         spec_prop: IoTSpecProperty = IoTSpecProperty(
                             spec=prop_info,
                             format_='string'
                         )
                         spec_prop.platform = 'switch'
-                        spec_prop.name = prop_info["propName"]
-                        spec_prop.description = prop_info["propName"]
                         spec_instance.properties.append(spec_prop)
 
                         spec_action: IoTSpecAction = IoTSpecAction(spec=prop_info)
                         spec_action.platform = 'button'
-                        spec_action.name = prop_info["propName"]
-                        spec_action.description = prop_info["propName"]
                         spec_instance.actions.append(spec_action)
         return spec_instance
