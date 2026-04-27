@@ -256,7 +256,7 @@ class IoTSpecParser:
         # Load spec instance
         instance = await self.__get_instance(product_key=product_key, sku_id=sku_id)
         if not isinstance(instance, dict):
-            raise IoTSpecError(f'invalid product instance, {product_key}')
+            raise IoTSpecError(f'invalid product instance, {product_key}, {sku_id}')
 
         product_identify = sku_id
         # 优先使用product_key
@@ -292,6 +292,7 @@ class IoTSpecParser:
                     #
                     #     spec_instance.events.append(spec_event)
                 elif prop_info['propType'] == 2:
+                    _LOGGER.info('propType 2, %s', prop_info)
                     # 操作(指令下发设置属性值)
                     if prop_info['skuTplNo'] == 'switch' and prop_info['aamCmd'] == 'set_state':
                         spec_prop: IoTSpecProperty = IoTSpecProperty(
@@ -305,4 +306,5 @@ class IoTSpecParser:
                         spec_action: IoTSpecAction = IoTSpecAction(spec=prop_info)
                         spec_action.platform = 'button'
                         spec_action.name = prop_info["propName"]
+                        spec_instance.actions.append(spec_action)
         return spec_instance
