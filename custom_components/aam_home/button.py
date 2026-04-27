@@ -24,18 +24,9 @@ async def async_setup_entry(
     # 创建开关实体
     new_entities = []
     for iot_device in device_list:
-        _LOGGER.warning('device product_key: %s', iot_device.product_key)
-        if iot_device.product_key in ["7504", "2668"]:
-            spec: IoTSpecAction = IoTSpecAction(
-                spec={
-                    'name': f'btn{iot_device.endpoint} ',
-                    'description': '',
-                },
-                in_=[],
-                out=[]
-            )
-            new_entities.append(AamButtonEntity(iot_device=iot_device, spec=spec))
-
+        for action in iot_device.action_list.get('button', []):
+            new_entities.append(AamButtonEntity(iot_device=iot_device, spec=action))
+    
     if new_entities:
         async_add_entities(new_entities)
 

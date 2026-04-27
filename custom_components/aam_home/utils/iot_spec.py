@@ -1,11 +1,51 @@
 # -*- coding: utf-8 -*-
-from typing import Any, Optional, Union
+import asyncio
+import logging
+from typing import Any, Union
 
+from .http_client import IoTHttpClient
 from .iot_error import IoTSpecError
+
+_LOGGER = logging.getLogger(__name__)
+
+
+class IoTSpecValueRange:
+    """MIoT SPEC value range class."""
+    min_: int
+    max_: int
+    step: int | float
+
+    def __init__(self, value_range: Union[dict, list]) -> None:
+        if isinstance(value_range, dict):
+            self.load(value_range)
+        elif isinstance(value_range, list):
+            self.from_spec(value_range)
+        else:
+            raise IoTSpecError('invalid value range format')
+
+    def load(self, value_range: dict) -> None:
+        if 'min' not in value_range or 'max' not in value_range or 'step' not in value_range:
+            raise IoTSpecError('invalid value range')
+        self.min_ = value_range['min']
+        self.max_ = value_range['max']
+        self.step = value_range['step']
+
+    def from_spec(self, value_range: list) -> None:
+        if len(value_range) != 3:
+            raise IoTSpecError('invalid value range')
+        self.min_ = value_range[0]
+        self.max_ = value_range[1]
+        self.step = value_range[2]
+
+    def dump(self) -> dict:
+        return {'min': self.min_, 'max': self.max_, 'step': self.step}
+
+    def __str__(self) -> str:
+        return f'[{self.min_}, {self.max_}, {self.step}'
 
 
 class IoTSpecValueListItem:
-    """MIoT SPEC value list item class."""
+    """IoT 规范值列表项类."""
     # NOTICE: bool type without name
     name: str
     # Value
@@ -26,7 +66,7 @@ class IoTSpecValueListItem:
 
 
 class IoTSpecValueList:
-    """IoT规范值列表类."""
+    """IoT 规范值列表类."""
     # pylint: disable=inconsistent-quotes
     items: list[IoTSpecValueListItem]
 
@@ -50,7 +90,7 @@ class IoTSpecValueList:
                 return item.value
         return None
 
-    def get_description_by_value(self, value: Any) -> Optional[str]:
+    def get_description_by_value(self, value: Any) -> str | None:
         for item in self.items:
             if item.value == value:
                 return item.description
@@ -62,26 +102,64 @@ class _IoTSpecBase:
     description: str
     name: str
 
+    platform: str | None
+
     def __init__(self, spec: dict) -> None:
         self.description = spec['description']
         self.name = spec.get('name', 'aam')
 
+        self.platform = None
+
 
 class IoTSpecProperty(_IoTSpecBase):
     """IoT 规范属性类."""
-    _value_list: Optional[IoTSpecValueList]
+    _format_: type
+    _value_range: IoTSpecValueRange | None
+    _value_list: IoTSpecValueList | None
 
-    def __init__(self, spec: dict, value_list: Optional[list[dict]] = None) -> None:
+    def __init__(
+            self,
+            spec: dict,
+            format_: str,
+            value_range: dict | None = None,
+            value_list: list[dict] | None = None
+    ) -> None:
         super().__init__(spec=spec)
+        self.format_ = format_
+        self.value_range = value_range
         self.value_list = value_list
 
     @property
-    def value_list(self) -> Optional[IoTSpecValueList]:
+    def format_(self) -> type:
+        return self._format_
+
+    @format_.setter
+    def format_(self, value: str) -> None:
+        self._format_ = {
+            'string': str,
+            'str': str,
+            'bool': bool,
+            'float': float
+        }.get(value, int)
+
+    @property
+    def value_range(self) -> IoTSpecValueRange | None:
+        return self._value_range
+
+    @value_range.setter
+    def value_range(self, value: dict | list | None) -> None:
+        """Set value-range, precision."""
+        if not value:
+            self._value_range = None
+            return
+        self._value_range = IoTSpecValueRange(value_range=value)
+
+    @property
+    def value_list(self) -> IoTSpecValueList | None:
         return self._value_list
 
     @value_list.setter
-    def value_list(self, value: Union[list[dict], IoTSpecValueList,
-    None]) -> None:
+    def value_list(self, value: list[dict] | IoTSpecValueList | None) -> None:
         if not value:
             self._value_list = None
             return
@@ -91,17 +169,131 @@ class IoTSpecProperty(_IoTSpecBase):
             self._value_list = value
 
 
+class IoTSpecEvent(_IoTSpecBase):
+    """IoT 规范事件类."""
+    argument: list[IoTSpecProperty]
+
+    def __init__(
+            self,
+            spec: dict,
+            argument: list[IoTSpecProperty] | None = None) -> None:
+        super().__init__(spec=spec)
+        self.argument = argument or []
+
+
 class IoTSpecAction(_IoTSpecBase):
-    """MIoT SPEC action class."""
+    """IoT 规范操作类."""
     in_: list[IoTSpecProperty]
     out: list[IoTSpecProperty]
 
     def __init__(
             self,
             spec: dict,
-            in_: Optional[list[IoTSpecProperty]] = None,
-            out: Optional[list[IoTSpecProperty]] = None
+            in_: list[IoTSpecProperty] | None = None,
+            out: list[IoTSpecProperty] | None = None
     ) -> None:
         super().__init__(spec=spec)
         self.in_ = in_ or []
         self.out = out or []
+
+
+class IoTSpecInstance:
+    """IoT 规范实例类."""
+    product_key: str
+    name: str
+    description: str
+    description_trans: str
+
+    properties: list[IoTSpecProperty]
+    events: list[IoTSpecEvent]
+    actions: list[IoTSpecAction]
+
+    def __init__(self, product_key: str, name: str, description: str, description_trans: str) -> None:
+        self.product_key = product_key
+        self.name = name
+        self.description = description
+        self.description_trans = description_trans
+
+        self.properties = []
+        self.events = []
+        self.actions = []
+
+
+class IoTSpecParser:
+    """IoT 规范解析器."""
+    _main_loop: asyncio.AbstractEventLoop
+    # IoT http client
+    _http: IoTHttpClient | None
+
+    def __init__(
+            self,
+            iot_http: IoTHttpClient | None = None,
+            loop: asyncio.AbstractEventLoop | None = None
+    ) -> None:
+        self._main_loop = loop or asyncio.get_running_loop()
+        self._http = iot_http
+
+    async def __get_instance(self, product_key: str) -> dict | None:
+        """获取产品实例."""
+        return await self._http.get_product_func_async(product_key)
+
+    async def parse(self, product_key: str) -> IoTSpecInstance | None:
+        # 重试3次
+        for index in range(3):
+            try:
+                return await self.__parse(product_key=product_key)
+            except Exception as err:  # pylint: disable=broad-exception-caught
+                _LOGGER.error('parse error, retry, %d, %s, %s', index, product_key, err)
+        return None
+
+    async def __parse(self, product_key: str) -> IoTSpecInstance:
+        _LOGGER.debug('parse product, %s', product_key)
+
+        # Load spec instance
+        instance = await self.__get_instance(product_key=product_key)
+        if not isinstance(instance, dict):
+            raise IoTSpecError(f'invalid product instance, {product_key}')
+
+        # Parse device type
+        spec_instance: IoTSpecInstance = IoTSpecInstance(
+            product_key=product_key,
+            name="hhhhhhhhhh",
+            description=instance['description'],
+            description_trans="tesdfdfjpafjafjpafja"
+        )
+
+        # Parse device property
+        for props in instance.values():
+            for property_ in props:
+                prop_info = property_.get('prop', {})
+                if prop_info['propType'] == 1:
+                    continue
+                    # 属性（上报）
+                    # if prop_info['report_type'] == 'prop':
+                    #     spec_prop: IoTSpecProperty = IoTSpecProperty(
+                    #         spec=prop_info,
+                    #         format_=property_['format']
+                    #     )
+                    #     spec_prop.name = f'prop_{property_["name"]}'
+                    #     spec_instance.properties.append(spec_prop)
+                    # # 事件（上报）
+                    # elif prop_info['reportType'] == 'event':
+                    #     spec_event: IoTSpecEvent = IoTSpecEvent(spec=prop_info)
+                    #     spec_event.name = f'event_{property_["name"]}'
+                    #
+                    #     spec_instance.events.append(spec_event)
+                elif prop_info['propType'] == 2:
+                    # 操作(指令下发设置属性值)
+                    if prop_info['skuTplNo'] == 'switch' and prop_info['aamCmd'] == 'aamCmd':
+                        spec_prop: IoTSpecProperty = IoTSpecProperty(
+                            spec=prop_info,
+                            format_='string'
+                        )
+                        spec_prop.platform = 'switch'
+                        spec_prop.name = prop_info["propName"]
+                        spec_instance.properties.append(spec_prop)
+
+                        spec_action: IoTSpecAction = IoTSpecAction(spec=prop_info)
+                        spec_action.platform = 'button'
+                        spec_action.name = prop_info["propName"]
+        return spec_instance

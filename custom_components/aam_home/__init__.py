@@ -16,6 +16,7 @@ from .const import (
 from .utils.iot_client import IoTClient, get_iot_instance_async
 from .utils.iot_device import IoTDevice
 from .utils.iot_error import IoTAuthError, IoTClientError
+from .utils.iot_spec import IoTSpecParser, IoTSpecInstance
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -56,16 +57,29 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
             entry_data=entry_data,
             persistent_notify=ha_persistent_notify
         )
+
+        # Spec parser
+        spec_parser = IoTSpecParser(iot_http=iot_client.iot_http, loop=iot_client.main_loop)
+
         iot_devices: list[IoTDevice] = []
         for mid_bind_id, info in iot_client.device_list.items():
+            spec_instance = await spec_parser.parse(product_key=info['productKey'])
+            if not isinstance(spec_instance, IoTSpecInstance):
+                _LOGGER.error('spec content is None, %s, %s', mid_bind_id, info)
+                continue
+
             device: IoTDevice = IoTDevice(
                 iot_client=iot_client,
                 device_info={
                     **info,
                     'manufacturer': "艾美科技"
-                })
+                },
+                spec_instance=spec_instance
+            )
+
             # _LOGGER.warning('mid_bind_id: %s, device: %s', mid_bind_id, device.name)
             iot_devices.append(device)
+            device.spec_transform()
 
         hass.data[DOMAIN]['devices'][config_entry.entry_id] = iot_devices
         # 设置平台

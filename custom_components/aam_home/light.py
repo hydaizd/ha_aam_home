@@ -24,7 +24,7 @@ async def async_setup_entry(
     # 创建灯光实体
     new_entities = []
     for iot_device in device_list:
-        if iot_device.product_key in ["7504"]:
+        for data in iot_device.entity_list.get('light', []):
             new_entities.append(AamLightEntity(iot_device=iot_device))
 
     if new_entities:

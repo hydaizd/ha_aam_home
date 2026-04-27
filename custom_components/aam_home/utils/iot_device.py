@@ -9,16 +9,27 @@ from homeassistant.helpers.entity import Entity
 from .common import slugify_did, slugify_name
 from .iot_client import IoTClient, IoTClientError
 from .iot_error import IoTDeviceError
-from .iot_spec import IoTSpecValueList, IoTSpecProperty, IoTSpecAction
+from .iot_spec import IoTSpecValueList, IoTSpecProperty, IoTSpecAction, IoTSpecInstance, IoTSpecEvent
 from ..const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
+
+
+class IoTEntityData:
+    """IoT 实体数据."""
+    platform: str
+    spec: IoTSpecInstance
+
+    def __init__(self, platform: str, spec: IoTSpecInstance) -> None:
+        self.platform = platform
+        self.spec = spec
 
 
 class IoTDevice:
     """智能设备."""
     # pylint: disable=unused-argument
     iot_client: IoTClient
+    spec_instance: IoTSpecInstance
 
     _online: bool
 
@@ -32,8 +43,14 @@ class IoTDevice:
     _group_id: str
     _endpoint_name: str
 
-    def __init__(self, iot_client: IoTClient, device_info: dict[str, Any]) -> None:
+    _entity_list: dict[str, list[IoTEntityData]]
+    _prop_list: dict[str, list[IoTSpecProperty]]
+    _event_list: dict[str, list[IoTSpecEvent]]
+    _action_list: dict[str, list[IoTSpecAction]]
+
+    def __init__(self, iot_client: IoTClient, device_info: dict[str, Any], spec_instance: IoTSpecInstance) -> None:
         self.iot_client = iot_client
+        self.spec_instance = spec_instance
 
         # 当设备不在线时会显示不可用
         self._online = device_info.get('onlineStatus', 0) == 1
@@ -47,6 +64,27 @@ class IoTDevice:
         self._model = device_info.get('skuId', '')
         self._manufacturer = device_info.get('manufacturer', '艾美科技')
         self._fw_version = device_info.get('version', '')
+
+        self._entity_list = {}
+        self._prop_list = {}
+        self._event_list = {}
+        self._action_list = {}
+
+    @property
+    def entity_list(self) -> dict[str, list[IoTEntityData]]:
+        return self._entity_list
+
+    @property
+    def prop_list(self) -> dict[str, list[IoTSpecProperty]]:
+        return self._prop_list
+
+    @property
+    def event_list(self) -> dict[str, list[IoTSpecEvent]]:
+        return self._event_list
+
+    @property
+    def action_list(self) -> dict[str, list[IoTSpecAction]]:
+        return self._action_list
 
     @property
     def online(self) -> bool:
@@ -103,6 +141,62 @@ class IoTDevice:
 
     def gen_action_entity_id(self, ha_domain: str, spec_name: str, mid_bind_id: str, endpoint: str) -> str:
         return f'{ha_domain}.{slugify_name(spec_name)}_{mid_bind_id}_{endpoint}'
+
+    def append_entity(self, entity_data: IoTEntityData) -> None:
+        self._entity_list.setdefault(entity_data.platform, [])
+        self._entity_list[entity_data.platform].append(entity_data)
+
+    def append_prop(self, prop: IoTSpecProperty) -> None:
+        if not prop.platform:
+            return
+        self._prop_list.setdefault(prop.platform, [])
+        self._prop_list[prop.platform].append(prop)
+
+    def append_event(self, event: IoTSpecEvent) -> None:
+        if not event.platform:
+            return
+        self._event_list.setdefault(event.platform, [])
+        self._event_list[event.platform].append(event)
+
+    def append_action(self, action: IoTSpecAction) -> None:
+        if not action.platform:
+            return
+        self._action_list.setdefault(action.platform, [])
+        self._action_list[action.platform].append(action)
+
+    def spec_transform(self) -> None:
+        """解析属性、事件、操作规范."""
+        # device_entity = self.parse_miot_device_entity(spec_instance=self.spec_instance)
+        # if device_entity:
+        #     self.append_entity(entity_data=device_entity)
+
+        for prop in self.spec_instance.properties:
+            if not prop.platform:
+                if prop.format_ == str:
+                    prop.platform = 'text'
+                elif prop.format_ == bool:
+                    prop.platform = 'switch'
+                elif prop.value_list:
+                    prop.platform = 'select'
+                elif prop.value_range:
+                    prop.platform = 'number'
+                else:
+                    # Irregular property will not be transformed.
+                    continue
+            self.append_prop(prop=prop)
+        for event in self.spec_instance.events:
+            if event.platform:
+                continue
+            event.platform = 'event'
+            self.append_event(event=event)
+        for action in self.spec_instance.actions:
+            if action.platform:
+                continue
+            if action.in_:
+                action.platform = 'notify'
+            else:
+                action.platform = 'button'
+            self.append_action(action=action)
 
 
 class IoTPropertyEntity(Entity):

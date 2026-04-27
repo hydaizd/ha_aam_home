@@ -60,6 +60,18 @@ class IoTClient:
     def main_loop(self) -> asyncio.AbstractEventLoop:
         return self._main_loop
 
+    @property
+    def host(self) -> str:
+        return self._host
+
+    @property
+    def device_list(self) -> dict[str, dict]:
+        return self._device_list
+
+    @property
+    def iot_http(self) -> IoTHttpClient:
+        return self._http
+
     async def init_async(self) -> None:
         """Init IoT client."""
         # Load user config and check
@@ -82,14 +94,6 @@ class IoTClient:
 
         # Load device list
         self._device_list = await self._http.get_devices_async()
-
-    @property
-    def host(self) -> str:
-        return self._host
-
-    @property
-    def device_list(self) -> dict[str, dict]:
-        return self._device_list
 
     async def ctrl_device_async(self, cmd: str, mid_bind_id: str, endpoint: str, group_id: str,
                                 json_data: dict) -> bool:

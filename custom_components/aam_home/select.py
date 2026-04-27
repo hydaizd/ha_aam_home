@@ -24,32 +24,9 @@ async def async_setup_entry(
 
     new_entities = []
     for iot_device in device_list:
-        if iot_device.product_key in ["2668"]:
-            spec: IoTSpecProperty = IoTSpecProperty(
-                spec={
-                    'name': f'{iot_device.endpoint} ',
-                    'description': '默认上电状态',
-                },
-                value_list=[
-                    {
-                        'name': 'EpWorkMode',
-                        'value': 64,
-                        'description': '通电打开',
-                    },
-                    {
-                        'name': 'EpWorkMode',
-                        'value': 96,
-                        'description': '通电关闭',
-                    },
-                    {
-                        'name': 'EpWorkMode',
-                        'value': 160,
-                        'description': '保持断电前状态',
-                    }
-                ],
-            )
-            new_entities.append(AamSelectEntity(iot_device=iot_device, spec=spec))
-
+        for prop in iot_device.prop_list.get('select', []):
+            new_entities.append(AamSelectEntity(iot_device=iot_device, spec=prop))
+    
     if new_entities:
         async_add_entities(new_entities)
 
