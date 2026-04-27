@@ -293,7 +293,7 @@ class IoTSpecParser:
                 prop_info = property_.get('prop', {})
                 details = property_.get('details', {})
                 for detail in details:
-                    detail['description'] = detail['paramName']
+                    detail['description'] = f'{prop_info['propName']} {detail['paramName']}'
                     detail['name'] = detail['aamParam']
 
                     # 操作(指令下发设置属性值)
