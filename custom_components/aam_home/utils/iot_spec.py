@@ -261,13 +261,13 @@ class IoTSpecParser:
         for index in range(3):
             try:
                 return await self.__parse(product_key=product_key, sku_id=sku_id)
-            except Exception as err:  # pylint: disable=broad-exception-caught
+            except Exception as err:
                 _LOGGER.error('parse error, retry, %d, product_key: %s, sku_id: %s, %s', index, product_key, sku_id,
                               err)
         return None
 
     async def __parse(self, product_key: str, sku_id: str) -> IoTSpecInstance:
-        _LOGGER.debug('parse product, %s', product_key)
+        _LOGGER.debug('parse product, %s, %s', product_key, sku_id)
 
         # Load spec instance
         instance = await self.__get_instance(product_key=product_key, sku_id=sku_id)
