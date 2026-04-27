@@ -317,10 +317,12 @@ class IoTSpecParser:
                         )
                         spec_prop.platform = 'switch'
                         spec_prop.name = prop_info["propName"]
+                        spec_prop.description = prop_info["propName"]
                         spec_instance.properties.append(spec_prop)
 
                         spec_action: IoTSpecAction = IoTSpecAction(spec=prop_info)
                         spec_action.platform = 'button'
                         spec_action.name = prop_info["propName"]
+                        spec_action.description = prop_info["propName"]
                         spec_instance.actions.append(spec_action)
         return spec_instance
