@@ -218,6 +218,16 @@ class IoTSpecInstance:
         self.events = []
         self.actions = []
 
+    def __str__(self) -> str:
+        return (
+            f'IoTSpecInstance(product_identify={self.product_identify}, '
+            f'name={self.name}, '
+            f'description={self.description}, '
+            f'properties={len(self.properties)}, '
+            f'events={len(self.events)}, '
+            f'actions={len(self.actions)})'
+        )
+
 
 class IoTSpecParser:
     """IoT 规范解析器."""
@@ -293,7 +303,6 @@ class IoTSpecParser:
                     #
                     #     spec_instance.events.append(spec_event)
                 elif prop_info['propType'] == 2:
-                    _LOGGER.warning('propType 2, %s', prop_info)
                     # 操作(指令下发设置属性值)
                     if prop_info['skuTplNo'] == 'switch' and prop_info['aamCmd'] == 'set_state':
                         _LOGGER.warning('propType 2----, %s', prop_info)

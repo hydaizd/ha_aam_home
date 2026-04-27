@@ -169,7 +169,7 @@ class IoTDevice:
         # device_entity = self.parse_miot_device_entity(spec_instance=self.spec_instance)
         # if device_entity:
         #     self.append_entity(entity_data=device_entity)
-
+        _LOGGER.warning('spec_instance_, %s', self.spec_instance)
         for prop in self.spec_instance.properties:
             _LOGGER.warning('spec_instance_prop, %s', prop)
 
