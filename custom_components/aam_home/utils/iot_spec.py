@@ -247,7 +247,8 @@ class IoTSpecParser:
             try:
                 return await self.__parse(product_key=product_key, sku_id=sku_id)
             except Exception as err:  # pylint: disable=broad-exception-caught
-                _LOGGER.error('parse error, retry, %d, %s, %s', index, product_key, err)
+                _LOGGER.error('parse error, retry, %d, product_key: %s, sku_id: %s, %s', index, product_key, sku_id,
+                              err)
         return None
 
     async def __parse(self, product_key: str, sku_id: str) -> IoTSpecInstance:
@@ -292,9 +293,10 @@ class IoTSpecParser:
                     #
                     #     spec_instance.events.append(spec_event)
                 elif prop_info['propType'] == 2:
-                    _LOGGER.info('propType 2, %s', prop_info)
+                    _LOGGER.warning('propType 2, %s', prop_info)
                     # 操作(指令下发设置属性值)
                     if prop_info['skuTplNo'] == 'switch' and prop_info['aamCmd'] == 'set_state':
+                        _LOGGER.warning('propType 2----, %s', prop_info)
                         spec_prop: IoTSpecProperty = IoTSpecProperty(
                             spec=prop_info,
                             format_='string'
