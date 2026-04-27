@@ -258,7 +258,7 @@ class IoTSpecParser:
         spec_instance: IoTSpecInstance = IoTSpecInstance(
             product_key=product_key,
             name="hhhhhhhhhh",
-            description=instance['description'],
+            description='bbbbbbbbbbbbbbbb',
             description_trans="tesdfdfjpafjafjpafja"
         )
 
@@ -284,7 +284,7 @@ class IoTSpecParser:
                     #     spec_instance.events.append(spec_event)
                 elif prop_info['propType'] == 2:
                     # 操作(指令下发设置属性值)
-                    if prop_info['skuTplNo'] == 'switch' and prop_info['aamCmd'] == 'aamCmd':
+                    if prop_info['skuTplNo'] == 'switch' and prop_info['aamCmd'] == 'set_state':
                         spec_prop: IoTSpecProperty = IoTSpecProperty(
                             spec=prop_info,
                             format_='string'
