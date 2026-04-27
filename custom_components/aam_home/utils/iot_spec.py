@@ -291,37 +291,40 @@ class IoTSpecParser:
         for props in instance.values():
             for property_ in props:
                 prop_info = property_.get('prop', {})
-                if prop_info['propType'] == 1:
-                    continue
-                    # 属性（上报）
-                    # if prop_info['report_type'] == 'prop':
-                    #     spec_prop: IoTSpecProperty = IoTSpecProperty(
-                    #         spec=prop_info,
-                    #         format_=property_['format']
-                    #     )
-                    #     spec_prop.name = f'prop_{property_["name"]}'
-                    #     spec_instance.properties.append(spec_prop)
-                    # # 事件（上报）
-                    # elif prop_info['reportType'] == 'event':
-                    #     spec_event: IoTSpecEvent = IoTSpecEvent(spec=prop_info)
-                    #     spec_event.name = f'event_{property_["name"]}'
-                    #
-                    #     spec_instance.events.append(spec_event)
-                elif prop_info['propType'] == 2:
+                details = prop_info.get('details', {})
+                for detail in details:
+                    detail['description'] = detail['propName']
+                    detail['name'] = detail['propName']
+
                     # 操作(指令下发设置属性值)
-                    if prop_info['skuTplNo'] == 'switch' and prop_info['aamCmd'] == 'set_state':
-                        _LOGGER.warning('propType 2----, %s', prop_info)
-                        prop_info['description'] = prop_info['propName']
-                        prop_info['name'] = prop_info['propName']
+                    if prop_info['propType'] == 2:
+                        # 枚举类型
+                        value_list = []
+                        if detail['aamParamValueType'] in ['enum', 'int_enum']:
+                            for value_info in detail.get('enum', []):
+                                value_list.append({
+                                    'value': value_info['aamValue'],
+                                    'description': value_info['aamKey'],
+                                })
 
                         spec_prop: IoTSpecProperty = IoTSpecProperty(
-                            spec=prop_info,
-                            format_='string'
+                            spec=detail,
+                            format_=detail['aamParamValueType'],
+                            value_list=value_list,
                         )
-                        spec_prop.platform = 'switch'
                         spec_instance.properties.append(spec_prop)
+                    # 上报
+                    elif prop_info['propType'] == 1:
+                        # 事件
+                        if prop_info['report_type'] == 'event':
+                            spec_event: IoTSpecEvent = IoTSpecEvent(spec=detail)
+                            spec_instance.events.append(spec_event)
+                        # 属性
+                        elif prop_info['report_type'] == 'prop':
+                            spec_prop: IoTSpecProperty = IoTSpecProperty(
+                                spec=detail,
+                                format_=detail['aamParamValueType']
+                            )
+                            spec_instance.properties.append(spec_prop)
 
-                        spec_action: IoTSpecAction = IoTSpecAction(spec=prop_info)
-                        spec_action.platform = 'button'
-                        spec_instance.actions.append(spec_action)
         return spec_instance
