@@ -325,17 +325,17 @@ class IoTSpecParser:
                         )
                         spec_instance.properties.append(spec_prop)
                     # 上报
-                    elif prop_info['propType'] == 1:
-                        # 事件
-                        if prop_info['report_type'] == 'event':
-                            spec_event: IoTSpecEvent = IoTSpecEvent(spec=detail)
-                            spec_instance.events.append(spec_event)
-                        # 属性
-                        elif prop_info['report_type'] == 'prop':
-                            spec_prop: IoTSpecProperty = IoTSpecProperty(
-                                spec=detail,
-                                format_=detail['aamParamValueType']
-                            )
-                            spec_instance.properties.append(spec_prop)
+                    # elif prop_info['propType'] == 1:
+                    #     # 事件
+                    #     if prop_info['report_type'] == 'event':
+                    #         spec_event: IoTSpecEvent = IoTSpecEvent(spec=detail)
+                    #         spec_instance.events.append(spec_event)
+                    #     # 属性
+                    #     elif prop_info['report_type'] == 'prop':
+                    #         spec_prop: IoTSpecProperty = IoTSpecProperty(
+                    #             spec=detail,
+                    #             format_=detail['aamParamValueType']
+                    #         )
+                    #         spec_instance.properties.append(spec_prop)
 
         return spec_instance
