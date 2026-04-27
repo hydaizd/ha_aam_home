@@ -294,7 +294,7 @@ class IoTSpecParser:
                 details = property_.get('details', {})
                 for detail in details:
                     detail['description'] = detail['paramName']
-                    detail['name'] = detail['paramName']
+                    detail['name'] = detail['aamParam']
 
                     # 操作(指令下发设置属性值)
                     if prop_info['propType'] == 2:
