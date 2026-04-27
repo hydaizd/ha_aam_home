@@ -298,27 +298,9 @@ class IoTSpecParser:
 
                     # 操作(指令下发设置属性值)
                     if prop_info['propType'] == 2:
-                        value_range = None
-                        value_list = None
+                        value_range = self._get_value_range(detail)
+                        value_list = self._get_value_list(detail)
 
-                        # 枚举类型
-                        if detail['aamParamValueType'] in ['enum', 'int_enum']:
-                            value_list = []
-                            for value_info in detail.get('enum', []):
-                                value_list.append({
-                                    'value': value_info['aamValue'],
-                                    'description': value_info['aamKey'],
-                                })
-
-                        # 范围类型
-                        if detail['aamMinValue'] != 0 or detail['aamMaxValue'] != 0:
-                            value_range = {
-                                'min': detail['aamMinValue'],
-                                'max': detail['aamMaxValue'],
-                                'step': detail['space']
-                            }
-
-                        _LOGGER.warning('detail: %s', detail)
                         spec_prop: IoTSpecProperty = IoTSpecProperty(
                             spec=detail,
                             format_=detail['aamParamValueType'],
@@ -341,3 +323,26 @@ class IoTSpecParser:
                     #         spec_instance.properties.append(spec_prop)
 
         return spec_instance
+
+    def _get_value_list(self, prop_detail: Any) -> list[dict] | None:
+        """ 获取枚举类型列表 """
+        value_list = None
+        if prop_detail['aamParamValueType'] in ['enum', 'int_enum']:
+            value_list = []
+            for value_info in prop_detail.get('enum', []):
+                value_list.append({
+                    'value': value_info['aamValue'],
+                    'description': value_info['aamKey'],
+                })
+        return value_list
+
+    def _get_value_range(self, prop_detail: Any) -> dict | None:
+        """ 获取范围类型数值 """
+        value_range = None
+        if prop_detail['aamMinValue'] != 0 or prop_detail['aamMaxValue'] != 0:
+            value_range = {
+                'min': prop_detail['aamMinValue'],
+                'max': prop_detail['aamMaxValue'],
+                'step': prop_detail['space']
+            }
+        return value_range
