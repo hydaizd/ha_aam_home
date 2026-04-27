@@ -174,10 +174,11 @@ class IoTHttpClient:
         if 'data' not in res_obj:
             raise IoTHttpError('invalid response result')
 
-    async def get_product_func_async(self, product_key: str) -> dict:
+    async def get_product_func_async(self, product_key: str, sku_id: str) -> dict:
         """获取产品功能."""
         req_params = {
             "productKey": product_key,
+            "skuId": sku_id,
         }
         res_obj = await self.__api_get_async(
             url_path='/api/basic/product/endpoint/func',

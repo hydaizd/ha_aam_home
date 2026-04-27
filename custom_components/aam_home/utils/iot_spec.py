@@ -199,7 +199,7 @@ class IoTSpecAction(_IoTSpecBase):
 
 class IoTSpecInstance:
     """IoT 规范实例类."""
-    product_key: str
+    product_identify: str  # 产品唯一标识(产品key或sku_id)
     name: str
     description: str
     description_trans: str
@@ -208,8 +208,8 @@ class IoTSpecInstance:
     events: list[IoTSpecEvent]
     actions: list[IoTSpecAction]
 
-    def __init__(self, product_key: str, name: str, description: str, description_trans: str) -> None:
-        self.product_key = product_key
+    def __init__(self, product_identify: str, name: str, description: str, description_trans: str) -> None:
+        self.product_identify = product_identify
         self.name = name
         self.description = description
         self.description_trans = description_trans
@@ -233,30 +233,39 @@ class IoTSpecParser:
         self._main_loop = loop or asyncio.get_running_loop()
         self._http = iot_http
 
-    async def __get_instance(self, product_key: str) -> dict | None:
+    async def __get_instance(self, product_key: str, sku_id: str) -> dict | None:
         """获取产品实例."""
-        return await self._http.get_product_func_async(product_key)
+        return await self._http.get_product_func_async(product_key=product_key, sku_id=sku_id)
 
-    async def parse(self, product_key: str) -> IoTSpecInstance | None:
+    async def parse(self, product_key: str, sku_id: str) -> IoTSpecInstance | None:
+        # 过滤掉product_key 和 sku_id 同时为空的设备
+        if not product_key and not sku_id:
+            return None
+
         # 重试3次
         for index in range(3):
             try:
-                return await self.__parse(product_key=product_key)
+                return await self.__parse(product_key=product_key, sku_id=sku_id)
             except Exception as err:  # pylint: disable=broad-exception-caught
                 _LOGGER.error('parse error, retry, %d, %s, %s', index, product_key, err)
         return None
 
-    async def __parse(self, product_key: str) -> IoTSpecInstance:
+    async def __parse(self, product_key: str, sku_id: str) -> IoTSpecInstance:
         _LOGGER.debug('parse product, %s', product_key)
 
         # Load spec instance
-        instance = await self.__get_instance(product_key=product_key)
+        instance = await self.__get_instance(product_key=product_key, sku_id=sku_id)
         if not isinstance(instance, dict):
             raise IoTSpecError(f'invalid product instance, {product_key}')
 
+        product_identify = sku_id
+        # 优先使用product_key
+        if product_key:
+            product_identify = product_key
+
         # Parse device type
         spec_instance: IoTSpecInstance = IoTSpecInstance(
-            product_key=product_key,
+            product_identify=product_identify,
             name="hhhhhhhhhh",
             description='bbbbbbbbbbbbbbbb',
             description_trans="tesdfdfjpafjafjpafja"
