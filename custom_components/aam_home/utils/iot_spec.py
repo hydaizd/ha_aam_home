@@ -315,6 +315,7 @@ class IoTSpecParser:
                             value_range = {
                                 'min': detail['aamMinValue'],
                                 'max': detail['aamMaxValue'],
+                                'step': detail['space']
                             }
 
                         _LOGGER.warning('detail: %s', detail)
