@@ -223,6 +223,7 @@ class IoTSpecInstance:
             f'IoTSpecInstance(product_identify={self.product_identify}, '
             f'name={self.name}, '
             f'description={self.description}, '
+            f'description_trans={self.description_trans}, '
             f'properties={len(self.properties)}, '
             f'events={len(self.events)}, '
             f'actions={len(self.actions)})'
@@ -250,6 +251,10 @@ class IoTSpecParser:
     async def parse(self, product_key: str, sku_id: str) -> IoTSpecInstance | None:
         # 过滤掉product_key 和 sku_id 同时为空的设备
         if not product_key and not sku_id:
+            return None
+
+        # 指定产品测试
+        if product_key != '2668':
             return None
 
         # 重试3次
