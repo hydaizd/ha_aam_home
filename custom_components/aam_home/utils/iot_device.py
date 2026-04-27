@@ -170,6 +170,8 @@ class IoTDevice:
         # if device_entity:
         #     self.append_entity(entity_data=device_entity)
 
+        _LOGGER.warning('spec_instance, %s', self.spec_instance)
+
         for prop in self.spec_instance.properties:
             if not prop.platform:
                 if prop.format_ == str:
