@@ -311,7 +311,7 @@ class IoTSpecParser:
                                 })
 
                         # 范围类型
-                        if detail['aamMinValue'] >= 0 and detail['aamMaxValue'] > 0:
+                        if detail['aamMinValue'] != 0 or detail['aamMaxValue'] != 0:
                             value_range = {
                                 'min': detail['aamMinValue'],
                                 'max': detail['aamMaxValue'],
