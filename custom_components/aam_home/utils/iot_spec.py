@@ -317,6 +317,7 @@ class IoTSpecParser:
                                 'max': detail['aamMaxValue'],
                             }
 
+                        _LOGGER.warning('detail: %s', detail)
                         spec_prop: IoTSpecProperty = IoTSpecProperty(
                             spec=detail,
                             format_=detail['aamParamValueType'],
