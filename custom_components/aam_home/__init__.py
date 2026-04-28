@@ -65,9 +65,8 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         for mid_bind_id, info in iot_client.device_list.items():
             spec_instance = await spec_parser.parse(product_key=info['productKey'], sku_id=info['skuId'])
             if not isinstance(spec_instance, IoTSpecInstance):
-                _LOGGER.error('spec content is None, %s, %s', mid_bind_id, info)
+                _LOGGER.error('spec content is None, mid_bind_id=%s', mid_bind_id)
                 continue
-
             device: IoTDevice = IoTDevice(
                 iot_client=iot_client,
                 device_info={
@@ -76,8 +75,6 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
                 },
                 spec_instance=spec_instance
             )
-
-            # _LOGGER.warning('mid_bind_id: %s, device: %s', mid_bind_id, device.name)
             iot_devices.append(device)
             device.spec_transform()
 
