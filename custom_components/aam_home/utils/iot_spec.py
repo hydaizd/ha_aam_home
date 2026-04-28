@@ -298,7 +298,7 @@ class IoTSpecParser:
                 continue
 
             for property_ in service.get('properties', []):
-                if 'type' not in property_ or 'description' not in property_ or 'format' not in property_ or 'access' not in property_:
+                if 'type' not in property_ or 'description' not in property_ or 'format' not in property_:
                     continue
                 p_type_strs: list[str] = property_['type'].split(':')
                 unit = property_.get('unit', None)
