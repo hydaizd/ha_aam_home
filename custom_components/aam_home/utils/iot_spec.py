@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import asyncio
 import logging
-from typing import Any, Union
+from typing import Any, Union, Optional
 
 from .http_client import IoTHttpClient
 from .iot_error import IoTSpecError
@@ -121,11 +121,13 @@ class IoTSpecProperty(_IoTSpecBase):
             self,
             spec: dict,
             format_: str,
-            value_range: dict | None = None,
-            value_list: list[dict] | None = None
+            unit: Optional[str] = None,
+            value_range: Optional[dict] = None,
+            value_list: Optional[list[dict]] = None,
     ) -> None:
         super().__init__(spec=spec)
         self.format_ = format_
+        self.unit = unit
         self.value_range = value_range
         self.value_list = value_list
 
@@ -246,7 +248,7 @@ class IoTSpecParser:
 
     async def __get_instance(self, product_key: str, sku_id: str) -> dict | None:
         """获取产品实例."""
-        return await self._http.get_product_func_async(product_key=product_key, sku_id=sku_id)
+        return await self._http.get_device_instance_async(product_key=product_key, sku_id=sku_id)
 
     async def parse(self, product_key: str, sku_id: str) -> IoTSpecInstance | None:
         # 过滤掉product_key 和 sku_id 同时为空的设备
@@ -287,66 +289,33 @@ class IoTSpecParser:
             description_trans="tesdfdfjpafjafjpafja"
         )
 
-        # Parse device property
-        for props in instance.values():
-            for property_ in props:
-                prop_info = property_.get('prop', {})
-                details = property_.get('details', {})
-                for detail in details:
-                    detail['description'] = f'{prop_info['propName']} {detail['paramName']}'
-                    detail['name'] = detail['aamParam']
+        urn_service_instance = instance.get('services', [])
 
-                    # 操作(指令下发设置属性值)
-                    if prop_info['propType'] == 2:
-                        value_range = self._get_value_range(detail)
-                        value_list = self._get_value_list(detail)
+        # Parse services
+        for service in urn_service_instance:
+            if 'type' not in service or 'description' not in service:
+                _LOGGER.error('invalid service, %s', service)
+                continue
 
-                        spec_prop: IoTSpecProperty = IoTSpecProperty(
-                            spec=detail,
-                            format_=detail['aamParamValueType'],
-                            value_list=value_list,
-                            value_range=value_range,
-                        )
-                        spec_prop.platform = self._get_platform(details)
-                        spec_instance.properties.append(spec_prop)
-                    # 上报
-                    # elif prop_info['propType'] == 1:
-                    #     # 事件
-                    #     if prop_info['report_type'] == 'event':
-                    #         spec_event: IoTSpecEvent = IoTSpecEvent(spec=detail)
-                    #         spec_instance.events.append(spec_event)
-                    #     # 属性
-                    #     elif prop_info['report_type'] == 'prop':
-                    #         spec_prop: IoTSpecProperty = IoTSpecProperty(
-                    #             spec=detail,
-                    #             format_=detail['aamParamValueType']
-                    #         )
-                    #         spec_instance.properties.append(spec_prop)
+            for property_ in service.get('properties', []):
+                if 'type' not in property_ or 'description' not in property_ or 'format' not in property_ or 'access' not in property_:
+                    continue
+                p_type_strs: list[str] = property_['type'].split(':')
+                unit = property_.get('unit', None)
+                spec_prop: IoTSpecProperty = IoTSpecProperty(
+                    spec=property_,
+                    format_=property_['format'],
+                    unit=unit if unit != 'none' else None
+                )
+                spec_prop.name = p_type_strs[3]
 
+                if 'value-list' in property_:
+                    spec_prop.value_list = property_['value-list']
+                if 'value-range' in property_:
+                    spec_prop.value_range = property_['value-range']
+
+                spec_instance.properties.append(spec_prop)
         return spec_instance
-
-    def _get_value_list(self, prop_detail: Any) -> list[dict] | None:
-        """ 获取枚举类型列表 """
-        value_list = None
-        if prop_detail['aamParamValueType'] in ['enum', 'int_enum']:
-            value_list = []
-            for value_info in prop_detail.get('enum', []):
-                value_list.append({
-                    'value': value_info['aamValue'],
-                    'description': value_info['aamKey'],
-                })
-        return value_list
-
-    def _get_value_range(self, prop_detail: Any) -> dict | None:
-        """ 获取范围类型数值 """
-        value_range = None
-        if prop_detail['aamMinValue'] != 0 or prop_detail['aamMaxValue'] != 0:
-            value_range = {
-                'min': prop_detail['aamMinValue'],
-                'max': prop_detail['aamMaxValue'],
-                'step': prop_detail['space']
-            }
-        return value_range
 
     def _get_platform(self, details: Any) -> str | None:
         """ 获取ha平台类型 """
