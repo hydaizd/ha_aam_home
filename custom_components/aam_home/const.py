@@ -8,8 +8,8 @@ SUPPORTED_PLATFORMS: list = [
     "select",
     "button",
     "number",
-    "sensor",
-    "light"
+    # "sensor",
+    # "light"
 ]
 
 # 配置键
