@@ -209,6 +209,9 @@ class IoTPropertyEntity(Entity):
     _value_list: Optional[IoTSpecValueList]
     _value: Any
 
+    _cmd: str  # 修改属性的命令
+    _param_key: str  # 修改属性的参数key
+
     def __init__(self, iot_device: IoTDevice, spec: IoTSpecProperty) -> None:
         self.iot_device = iot_device
         self.spec = spec
@@ -227,6 +230,12 @@ class IoTPropertyEntity(Entity):
         self._attr_name = f'{iot_device.endpoint_name}  {spec.description}'  # 实体名
         self._attr_available = iot_device.online  # 实体当前是否可用
 
+        # 解析属性设置命令和参数
+        service_type_strs: list[str] = spec.service.type_.split(':')
+        prop_type_strs: list[str] = spec.type_.split(':')
+        self._cmd = service_type_strs[4]
+        self._param_key = prop_type_strs[3]
+
     @property
     def device_info(self) -> Optional[DeviceInfo]:
         return self.iot_device.device_info
@@ -243,14 +252,14 @@ class IoTPropertyEntity(Entity):
             return None
         return self._value_list.get_value_by_description(description)
 
-    async def ctrl_device_async(self, cmd: str, value: any, json_data: dict) -> bool:
+    async def set_property_async(self, value: any) -> bool:
         try:
-            await self.iot_device.iot_client.ctrl_device_async(
-                cmd=cmd,
+            await self.iot_device.iot_client.set_prop_async(
+                cmd=self._cmd,
                 mid_bind_id=self.iot_device.mid_bind_id,
                 endpoint=self.iot_device.endpoint,
                 group_id=self.iot_device.group_id,
-                json_data=json_data,
+                json_data={self._param_key: value},
             )
         except IoTClientError as e:
             raise RuntimeError(f'{e}, {self.iot_device.mid_bind_id}, {self.iot_device.name}') from e

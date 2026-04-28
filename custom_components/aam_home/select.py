@@ -42,7 +42,7 @@ class AamSelectEntity(IoTPropertyEntity, SelectEntity):
     async def async_select_option(self, option: str) -> None:
         """Change the selected option."""
         value = self.get_vlist_value(description=option)
-        await self.ctrl_device_async("aam_socket_ep_workmode", value, {"EpWorkMode": value})
+        await self.set_property_async(value)
 
     @property
     def current_option(self) -> Optional[str]:

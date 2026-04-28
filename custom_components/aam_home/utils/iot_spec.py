@@ -99,12 +99,14 @@ class IoTSpecValueList:
 
 class _IoTSpecBase:
     """IoT 规范基类."""
+    type_: str
     description: str
     name: str
 
     platform: str | None
 
     def __init__(self, spec: dict) -> None:
+        self.type_ = spec['type']
         self.description = spec['description']
         self.name = spec.get('name', 'aam')
 
@@ -113,19 +115,24 @@ class _IoTSpecBase:
 
 class IoTSpecProperty(_IoTSpecBase):
     """IoT 规范属性类."""
+    unit: Optional[str]
     _format_: type
     _value_range: IoTSpecValueRange | None
     _value_list: IoTSpecValueList | None
 
+    service: 'IoTSpecService'
+
     def __init__(
             self,
             spec: dict,
+            service: 'IoTSpecService',
             format_: str,
             unit: Optional[str] = None,
             value_range: Optional[dict] = None,
             value_list: Optional[list[dict]] = None,
     ) -> None:
         super().__init__(spec=spec)
+        self.service = service
         self.format_ = format_
         self.unit = unit
         self.value_range = value_range
@@ -197,6 +204,13 @@ class IoTSpecAction(_IoTSpecBase):
         super().__init__(spec=spec)
         self.in_ = in_ or []
         self.out = out or []
+
+
+class IoTSpecService(_IoTSpecBase):
+    """IoT 规范服务类."""
+
+    def __init__(self, spec: dict) -> None:
+        super().__init__(spec=spec)
 
 
 class IoTSpecInstance:
@@ -297,6 +311,10 @@ class IoTSpecParser:
                 _LOGGER.error('invalid service, %s', service)
                 continue
 
+            type_strs: list[str] = service['type'].split(':')
+            spec_service: IoTSpecService = IoTSpecService(spec=service)
+            spec_service.name = type_strs[4]
+
             for property_ in service.get('properties', []):
                 if 'type' not in property_ or 'description' not in property_ or 'format' not in property_:
                     continue
@@ -304,6 +322,7 @@ class IoTSpecParser:
                 unit = property_.get('unit', None)
                 spec_prop: IoTSpecProperty = IoTSpecProperty(
                     spec=property_,
+                    service=spec_service,
                     format_=property_['format'],
                     unit=unit if unit != 'none' else None
                 )

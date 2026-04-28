@@ -34,6 +34,8 @@ async def async_setup_entry(
 
 class AamSwitchEntity(IoTPropertyEntity, SwitchEntity):
     """表示智空间盒子开关实体."""
+    _cmd: str
+    _param_key: str
 
     def __init__(self, iot_device: IoTDevice, spec: IoTSpecProperty) -> None:
         """初始化开关."""
@@ -47,14 +49,14 @@ class AamSwitchEntity(IoTPropertyEntity, SwitchEntity):
     async def async_turn_on(self, **kwargs: Any) -> None:
         """打开开关."""
         value = 1
-        await self.ctrl_device_async("set_state", value, {"State": value})
+        await self.set_property_async(value)
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """关闭开关."""
         value = 0
-        await self.ctrl_device_async("set_state", value, {"State": value})
+        await self.set_property_async(value)
 
     async def async_toggle(self, **kwargs: Any) -> None:
         """切换开关."""
         value = 0 if self.is_on else 1
-        await self.ctrl_device_async("set_state", value, {"State": value})
+        await self.set_property_async(value)

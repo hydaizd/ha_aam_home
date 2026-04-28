@@ -95,7 +95,7 @@ class IoTClient:
         # Load device list
         self._device_list = await self._http.get_devices_async()
 
-    async def ctrl_device_async(self, cmd: str, mid_bind_id: str, endpoint: str, group_id: str,
+    async def set_prop_async(self, cmd: str, mid_bind_id: str, endpoint: str, group_id: str,
                                 json_data: dict) -> bool:
         """设备控制."""
         if f'{mid_bind_id}_{endpoint}' not in self._device_list:
@@ -108,7 +108,7 @@ class IoTClient:
             "jsonData": json_data,
             "midBindId": mid_bind_id,
         }
-        result = await self._http.ctrl_device_async(data=req_data)
+        result = await self._http.set_prop_async(data=req_data)
         _LOGGER.debug('ctrl: %s, %s.%s, %s -> %s', cmd, mid_bind_id, endpoint, json_data, result)
         return True
 

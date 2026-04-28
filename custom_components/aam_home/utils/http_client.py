@@ -165,7 +165,7 @@ class IoTHttpClient:
                 device_list[f'{mid_bind_id}_{ep}'] = item
         return device_list
 
-    async def ctrl_device_async(self, data: dict) -> None:
+    async def set_prop_async(self, data: dict) -> None:
         """控制设备."""
         res_obj = await self.__api_post_async(
             url_path='/api/basic/device/ctrl',
