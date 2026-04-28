@@ -177,6 +177,17 @@ class IoTSpecProperty(_IoTSpecBase):
         elif isinstance(value, IoTSpecValueList):
             self._value_list = value
 
+    def __str__(self) -> str:
+        return (
+            f'IoTSpecProperty(name={self.name}, '
+            f'type={self.type_}, '
+            f'description={self.description}, '
+            f'unit={self.unit}, '
+            f'format={self.format_}, '
+            f'value_range={self.value_range}, '
+            f'value_list={self.value_list})'
+        )
+
 
 class IoTSpecEvent(_IoTSpecBase):
     """IoT 规范事件类."""
@@ -318,6 +329,7 @@ class IoTSpecParser:
             for property_ in service.get('properties', []):
                 if 'type' not in property_ or 'description' not in property_ or 'format' not in property_:
                     continue
+                property_['description'] = f'{service['description']} | {property_['description']}'
                 p_type_strs: list[str] = property_['type'].split(':')
                 unit = property_.get('unit', None)
                 spec_prop: IoTSpecProperty = IoTSpecProperty(
