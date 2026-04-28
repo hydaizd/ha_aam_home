@@ -10,7 +10,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 class IoTSpecValueRange:
-    """MIoT SPEC value range class."""
+    """IoT SPEC value range class."""
     min_: int
     max_: int
     step: int | float
@@ -307,6 +307,7 @@ class IoTSpecParser:
                             value_list=value_list,
                             value_range=value_range,
                         )
+                        spec_prop.platform = self._get_platform(details)
                         spec_instance.properties.append(spec_prop)
                     # 上报
                     # elif prop_info['propType'] == 1:
@@ -346,3 +347,17 @@ class IoTSpecParser:
                 'step': prop_detail['space']
             }
         return value_range
+
+    def _get_platform(self, details: Any) -> str | None:
+        """ 获取ha平台类型 """
+        values = []
+        if len(details) == 1:
+            # 只有2种取值，且取值只有0和1的，表示为switch类型
+            for detail in details:
+                if detail['aamParamValueType'] in ['enum', 'int_enum']:
+                    for value_info in detail.get('enum', []):
+                        values.append(value_info['aamValue'])
+        # 检查values是否只有0和1两种取值
+        if len(values) == 2 and (sorted(values) == [0, 1] or sorted(values) == ['0', '1']):
+            return 'switch'
+        return None

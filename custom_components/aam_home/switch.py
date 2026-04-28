@@ -26,7 +26,6 @@ async def async_setup_entry(
     new_entities = []
     for iot_device in device_list:
         for prop in iot_device.prop_list.get('switch', []):
-            _LOGGER.warning('prop, %s', prop)
             new_entities.append(AamSwitchEntity(iot_device=iot_device, spec=prop))
 
     if new_entities:
