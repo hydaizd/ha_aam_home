@@ -304,10 +304,12 @@ class IoTSpecParser:
                 unit = property_.get('unit', None)
                 spec_prop: IoTSpecProperty = IoTSpecProperty(
                     spec=property_,
-                    format_=self._get_platform(property_),
+                    format_=property_['format'],
                     unit=unit if unit != 'none' else None
                 )
                 spec_prop.name = p_type_strs[3]
+                # 为None时则根据format判断平台类型
+                spec_prop.platform = self._get_platform(property_)
 
                 if 'value-list' in property_:
                     spec_prop.value_list = property_['value-list']
@@ -317,7 +319,7 @@ class IoTSpecParser:
                 spec_instance.properties.append(spec_prop)
         return spec_instance
 
-    def _get_platform(self, property_: dict) -> str:
+    def _get_platform(self, property_: dict) -> str | None:
         """ 获取ha平台类型 """
         if property_['format'] in ['enum', 'int_enum'] and 'value-list' in property_ and len(
                 property_['value-list']) == 2:
@@ -328,5 +330,4 @@ class IoTSpecParser:
             if sort_values == [0, 1] or sort_values == ['0', '1']:
                 return 'switch'
 
-        # 保持不变
-        return property_['format']
+        return None
