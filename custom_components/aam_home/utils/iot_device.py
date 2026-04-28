@@ -170,7 +170,13 @@ class IoTDevice:
         # if device_entity:
         #     self.append_entity(entity_data=device_entity)
         _LOGGER.warning('spec_instance_, %s, %s_%s, %s', self.spec_instance, self.mid_bind_id, self.endpoint, self.name)
+
         for prop in self.spec_instance.properties:
+            # 过滤掉不支持该属性的endpoint
+            prop_type_strs: list[str] = prop.type_.split(':')
+            if self.endpoint != prop_type_strs[4]:
+                continue
+
             _LOGGER.warning('spec_instance_prop, %s', prop)
 
             if not prop.platform:
