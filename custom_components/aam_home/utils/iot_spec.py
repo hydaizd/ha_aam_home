@@ -352,12 +352,14 @@ class IoTSpecParser:
         """ 获取ha平台类型 """
         values = []
         if len(details) == 1:
-            # 只有2种取值，且取值只有0和1的，表示为switch类型
+            # 只有2种取值，且取值只有0和1的，转为switch类型
             for detail in details:
                 if detail['aamParamValueType'] in ['enum', 'int_enum']:
                     for value_info in detail.get('enum', []):
                         values.append(value_info['aamValue'])
         # 检查values是否只有0和1两种取值
-        if len(values) == 2 and (sorted(values) == [0, 1] or sorted(values) == ['0', '1']):
-            return 'switch'
+        if len(values) == 2:
+            sort_values = sorted(values)
+            if sort_values == [0, 1] or sort_values == ['0', '1']:
+                return 'switch'
         return None
