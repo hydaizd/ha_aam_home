@@ -6,7 +6,10 @@ NAME: str = "艾美智空间"
 SUPPORTED_PLATFORMS: list = [
     "switch",
     "select",
-    "button"
+    "button",
+    "number",
+    "sensor",
+    "light"
 ]
 
 # 配置键
