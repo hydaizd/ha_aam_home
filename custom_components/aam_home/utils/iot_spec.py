@@ -304,7 +304,7 @@ class IoTSpecParser:
                 unit = property_.get('unit', None)
                 spec_prop: IoTSpecProperty = IoTSpecProperty(
                     spec=property_,
-                    format_=property_['format'],
+                    format_=self._get_platform(property_),
                     unit=unit if unit != 'none' else None
                 )
                 spec_prop.name = p_type_strs[3]
@@ -317,18 +317,16 @@ class IoTSpecParser:
                 spec_instance.properties.append(spec_prop)
         return spec_instance
 
-    def _get_platform(self, details: Any) -> str | None:
+    def _get_platform(self, property_: dict) -> str:
         """ 获取ha平台类型 """
-        values = []
-        if len(details) == 1:
-            # 只有2种取值，且取值只有0和1的，转为switch类型
-            for detail in details:
-                if detail['aamParamValueType'] in ['enum', 'int_enum']:
-                    for value_info in detail.get('enum', []):
-                        values.append(value_info['aamValue'])
-        # 检查values是否只有0和1两种取值
-        if len(values) == 2:
+        if property_['format'] in ['enum', 'int_enum'] and 'value-list' in property_ and len(
+                property_['value-list']) == 2:
+            values = []
+            for value_info in property_['value-list']:
+                values.append(value_info['value'])
             sort_values = sorted(values)
             if sort_values == [0, 1] or sort_values == ['0', '1']:
                 return 'switch'
-        return None
+
+        # 保持不变
+        return property_['format']
