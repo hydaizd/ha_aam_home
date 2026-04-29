@@ -50,6 +50,9 @@ class IoTDevice:
     _event_list: dict[str, list[IoTSpecEvent]]
     _action_list: dict[str, list[IoTSpecAction]]
 
+    # 实体值映射表
+    _entity_map: dict[str, Any]
+
     def __init__(self, iot_client: IoTClient, device_info: dict[str, Any], spec_instance: IoTSpecInstance) -> None:
         self.iot_client = iot_client
         self.spec_instance = spec_instance
@@ -205,6 +208,16 @@ class IoTDevice:
                 action.platform = 'button'
             self.append_action(action=action)
 
+    def add_entity_map(self, prop_name: str, value: Any):
+        """添加实体映射."""
+        key = f'{prop_name}_{self.endpoint}'
+        self._entity_map.setdefault(key, value)
+
+    def get_entity_map_value(self, prop_name: str) -> Optional[Any]:
+        """获取实体映射值."""
+        key = f'{prop_name}_{self.endpoint}'
+        return self._entity_map.get(key, '')
+
 
 class IoTPropertyEntity(Entity):
     """智能设备属性."""
@@ -265,15 +278,12 @@ class IoTPropertyEntity(Entity):
 
             # 如果属性有group_key，需要收集同一组的其他属性一起发送
             if self.spec.group_key:
-                entity_reg = entity_registry.async_get(self.hass)
-                # 获取设备的所有实体
-                entities = entity_registry.async_entries_for_device(entity_reg, self.iot_device.mid_bind_id)
-                for entity in entities:
-                    _LOGGER.warning(f'entity: {entity}')
-                    if entity.group_key == self.spec.group_key and entity.name != self.spec.name:
+                for prop in self.iot_device.prop_list.get('number', []):
+                    if prop.group_key == self.spec.group_key and prop.name != self.spec.name:
                         # 获取同一组其他属性的当前值
-                        json_data[entity.name] = entity._value
-                        break
+                        prop_value = self.iot_device.get_entity_map_value(prop.name)
+                        if prop_value is not None:
+                            json_data[prop.name] = prop_value
 
             await self.iot_device.iot_client.set_prop_async(
                 cmd=self._cmd,
@@ -285,6 +295,7 @@ class IoTPropertyEntity(Entity):
         except IoTClientError as e:
             raise RuntimeError(f'{e}, {self.iot_device.mid_bind_id}, {self.iot_device.name}') from e
         self._value = value
+        self.iot_device.add_entity_map(self.spec.name, value)
         # 立即更新UI
         self.async_write_ha_state()
         return True
