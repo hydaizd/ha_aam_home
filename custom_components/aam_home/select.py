@@ -25,16 +25,16 @@ async def async_setup_entry(
     new_entities = []
     for iot_device in device_list:
         for prop in iot_device.prop_list.get('select', []):
-            new_entities.append(AamSelectEntity(iot_device=iot_device, spec=prop))
-    
+            new_entities.append(AamSelectEntity(hass=hass, iot_device=iot_device, spec=prop))
+
     if new_entities:
         async_add_entities(new_entities)
 
 
 class AamSelectEntity(IoTPropertyEntity, SelectEntity):
-    def __init__(self, iot_device: IoTDevice, spec: IoTSpecProperty) -> None:
+    def __init__(self, hass: HomeAssistant, iot_device: IoTDevice, spec: IoTSpecProperty) -> None:
         """Initialize the Select."""
-        super().__init__(iot_device=iot_device, spec=spec)
+        super().__init__(hass=hass, iot_device=iot_device, spec=spec)
         if self._value_list:
             # 下拉框所有选项
             self._attr_options = self._value_list.descriptions

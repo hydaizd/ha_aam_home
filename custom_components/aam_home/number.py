@@ -22,15 +22,15 @@ async def async_setup_entry(
     new_entities = []
     for iot_device in device_list:
         for prop in iot_device.prop_list.get('number', []):
-            new_entities.append(AamNumberEntity(iot_device=iot_device, spec=prop))
+            new_entities.append(AamNumberEntity(hass=hass, iot_device=iot_device, spec=prop))
 
     if new_entities:
         async_add_entities(new_entities)
 
 
 class AamNumberEntity(IoTPropertyEntity, NumberEntity):
-    def __init__(self, iot_device: IoTDevice, spec: IoTSpecProperty) -> None:
-        super().__init__(iot_device=iot_device, spec=spec)
+    def __init__(self, hass: HomeAssistant, iot_device: IoTDevice, spec: IoTSpecProperty) -> None:
+        super().__init__(hass=hass, iot_device=iot_device, spec=spec)
 
         # Set value range
         if self._value_range:

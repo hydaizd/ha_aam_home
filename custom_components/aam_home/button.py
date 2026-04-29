@@ -25,8 +25,8 @@ async def async_setup_entry(
     new_entities = []
     for iot_device in device_list:
         for action in iot_device.action_list.get('button', []):
-            new_entities.append(AamButtonEntity(iot_device=iot_device, spec=action))
-    
+            new_entities.append(AamButtonEntity(hass=hass, iot_device=iot_device, spec=action))
+
     if new_entities:
         async_add_entities(new_entities)
 
@@ -34,9 +34,9 @@ async def async_setup_entry(
 class AamButtonEntity(IoTActionEntity, ButtonEntity):
     """Button entities for Xiaomi Home."""
 
-    def __init__(self, iot_device: IoTDevice, spec: IoTSpecAction) -> None:
+    def __init__(self, hass: HomeAssistant, iot_device: IoTDevice, spec: IoTSpecAction) -> None:
         """Initialize the Button."""
-        super().__init__(iot_device=iot_device, spec=spec)
+        super().__init__(hass=hass, iot_device=iot_device, spec=spec)
         # Use default device class
 
     async def async_press(self) -> None:
