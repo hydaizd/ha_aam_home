@@ -3,8 +3,6 @@ import asyncio
 import logging
 from typing import Any, Optional
 
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity import Entity
 
@@ -208,20 +206,19 @@ class IoTDevice:
                 action.platform = 'button'
             self.append_action(action=action)
 
-    def add_entity_map(self, prop_name: str, value: Any):
+    def add_entity_map(self, cmd: str, prop_name: str, value: Any):
         """添加实体映射."""
-        key = f'{prop_name}_{self.endpoint}'
+        key = f'{cmd}_{prop_name}_{self.endpoint}'
         self._entity_map.setdefault(key, value)
 
-    def get_entity_map_value(self, prop_name: str) -> Optional[Any]:
+    def get_entity_map_value(self, cmd: str, prop_name: str) -> Optional[Any]:
         """获取实体映射值."""
-        key = f'{prop_name}_{self.endpoint}'
+        key = f'{cmd}_{prop_name}_{self.endpoint}'
         return self._entity_map.get(key, '')
 
 
 class IoTPropertyEntity(Entity):
     """智能设备属性."""
-    hass: HomeAssistant
     iot_device: IoTDevice
     spec: IoTSpecProperty
     _main_loop: asyncio.AbstractEventLoop
@@ -232,8 +229,7 @@ class IoTPropertyEntity(Entity):
     _cmd: str  # 修改属性的命令
     _param_key: str  # 修改属性的参数key
 
-    def __init__(self, hass: HomeAssistant, iot_device: IoTDevice, spec: IoTSpecProperty) -> None:
-        self.hass = hass
+    def __init__(self, iot_device: IoTDevice, spec: IoTSpecProperty) -> None:
         self.iot_device = iot_device
         self.spec = spec
         self._value_range = spec.value_range
@@ -281,7 +277,7 @@ class IoTPropertyEntity(Entity):
                 for prop in self.iot_device.prop_list.get('number', []):
                     if prop.group_key == self.spec.group_key and prop.name != self.spec.name:
                         # 获取同一组其他属性的当前值
-                        prop_value = self.iot_device.get_entity_map_value(prop.name)
+                        prop_value = self.iot_device.get_entity_map_value(self._cmd, prop.name)
                         if prop_value is not None:
                             json_data[prop.name] = prop_value
 
@@ -295,7 +291,7 @@ class IoTPropertyEntity(Entity):
         except IoTClientError as e:
             raise RuntimeError(f'{e}, {self.iot_device.mid_bind_id}, {self.iot_device.name}') from e
         self._value = value
-        self.iot_device.add_entity_map(self.spec.name, value)
+        self.iot_device.add_entity_map(self._cmd, self.spec.name, value)
         # 立即更新UI
         self.async_write_ha_state()
         return True
