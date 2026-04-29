@@ -9,7 +9,7 @@ from homeassistant.helpers.entity import Entity
 from .common import slugify_did, slugify_name
 from .iot_client import IoTClient, IoTClientError
 from .iot_error import IoTDeviceError
-from .iot_spec import IoTSpecValueList, IoTSpecProperty, IoTSpecAction, IoTSpecInstance, IoTSpecEvent
+from .iot_spec import IoTSpecValueList, IoTSpecProperty, IoTSpecAction, IoTSpecInstance, IoTSpecEvent, IoTSpecValueRange
 from ..const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
@@ -209,6 +209,7 @@ class IoTPropertyEntity(Entity):
     iot_device: IoTDevice
     spec: IoTSpecProperty
     _main_loop: asyncio.AbstractEventLoop
+    _value_range: Optional[IoTSpecValueRange]
     _value_list: Optional[IoTSpecValueList]
     _value: Any
 
@@ -218,6 +219,7 @@ class IoTPropertyEntity(Entity):
     def __init__(self, iot_device: IoTDevice, spec: IoTSpecProperty) -> None:
         self.iot_device = iot_device
         self.spec = spec
+        self._value_range = spec.value_range
         self._value_list = spec.value_list
         self._value = None
         self.entity_id = self.iot_device.gen_prop_entity_id(

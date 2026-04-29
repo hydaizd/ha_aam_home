@@ -351,7 +351,7 @@ class IoTSpecParser:
         return spec_instance
 
     def _get_platform(self, property_: dict) -> str | None:
-        """ 获取ha平台类型 """
+        """ 获取ha平台类型，取值只有0和1的属性转化为switch布尔型 """
         if property_['format'] in ['enum', 'int_enum'] and 'value-list' in property_ and len(
                 property_['value-list']) == 2:
             values = []
@@ -360,5 +360,4 @@ class IoTSpecParser:
             sort_values = sorted(values)
             if sort_values == [0, 1] or sort_values == ['0', '1']:
                 return 'switch'
-
         return None
