@@ -45,4 +45,4 @@ class AamNumberEntity(IoTPropertyEntity, NumberEntity):
 
     async def async_set_native_value(self, value: float) -> None:
         """Update the current value."""
-        # await self.set_property_async(value=value)
+        await self.set_property_async(value=value)
