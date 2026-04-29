@@ -214,7 +214,7 @@ class IoTDevice:
     def get_entity_map_value(self, cmd: str, prop_name: str) -> Optional[Any]:
         """获取实体映射值."""
         key = f'{cmd}_{prop_name}_{self.endpoint}'
-        return self._entity_map.get(key, '')
+        return self._entity_map.get(key)
 
 
 class IoTPropertyEntity(Entity):
@@ -280,6 +280,9 @@ class IoTPropertyEntity(Entity):
                         prop_value = self.iot_device.get_entity_map_value(self._cmd, prop.name)
                         if prop_value is not None:
                             json_data[prop.name] = prop_value
+                        else:
+                            # 如果其他属性没有当前值，使用默认值
+                            json_data[prop.name] = self.spec.get_default_value()
 
             await self.iot_device.iot_client.set_prop_async(
                 cmd=self._cmd,

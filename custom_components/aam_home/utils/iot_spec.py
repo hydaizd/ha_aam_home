@@ -179,6 +179,15 @@ class IoTSpecProperty(_IoTSpecBase):
         elif isinstance(value, IoTSpecValueList):
             self._value_list = value
 
+    def get_default_value(self) -> Any:
+        """Get默认值."""
+        if self._format_ == str:
+            return ''
+        elif self._format_ == bool:
+            return False
+        else:
+            return 0
+
     def __str__(self) -> str:
         return (
             f'IoTSpecProperty(name={self.name}, '
