@@ -3,6 +3,8 @@ import asyncio
 import logging
 from typing import Any, Optional
 
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity import Entity
 
@@ -206,6 +208,7 @@ class IoTDevice:
 
 class IoTPropertyEntity(Entity):
     """智能设备属性."""
+    hass: HomeAssistant
     iot_device: IoTDevice
     spec: IoTSpecProperty
     _main_loop: asyncio.AbstractEventLoop
@@ -216,7 +219,8 @@ class IoTPropertyEntity(Entity):
     _cmd: str  # 修改属性的命令
     _param_key: str  # 修改属性的参数key
 
-    def __init__(self, iot_device: IoTDevice, spec: IoTSpecProperty) -> None:
+    def __init__(self, hass: HomeAssistant, iot_device: IoTDevice, spec: IoTSpecProperty) -> None:
+        self.hass = hass
         self.iot_device = iot_device
         self.spec = spec
         self._value_range = spec.value_range
@@ -261,10 +265,15 @@ class IoTPropertyEntity(Entity):
 
             # 如果属性有group_key，需要收集同一组的其他属性一起发送
             if self.spec.group_key:
-                for prop in self.iot_device.prop_list.get('number', []):
-                    if prop.group_key == self.spec.group_key and prop.name != self.spec.name:
+                entity_registry = entity_registry.async_get(self.hass)
+                # 获取设备的所有实体
+                device_id = {(DOMAIN, self.iot_device.did_tag)}
+                entities = entity_registry.get_entries_for_device_id(device_id)
+                for entity in entities:
+                    _LOGGER.warning(f'entity: {entity}')
+                    if entity.group_key == self.spec.group_key and entity.name != self.spec.name:
                         # 获取同一组其他属性的当前值
-                        json_data[prop.name] = 0
+                        json_data[entity.name] = entity._value
                         break
 
             await self.iot_device.iot_client.set_prop_async(
