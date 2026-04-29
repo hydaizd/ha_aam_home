@@ -18,6 +18,31 @@ def slugify_name(name: str, separator: str = '_') -> str:
     return slugify(name, separator=separator)
 
 
+def get_service_name(type_: str) -> str:
+    """Get service name from type."""
+    service_strs: list[str] = type_.split(':')
+    return service_strs[4]
+
+
+def get_prop_name(type_: str) -> str:
+    """Get property name from type."""
+    prop_strs: list[str] = type_.split(':')
+    return prop_strs[3]
+
+
+def get_prop_endpoint(type_: str) -> str:
+    """Get property endpoint from type."""
+    prop_strs: list[str] = type_.split(':')
+    return prop_strs[4]
+
+
+def get_prop_group_key(product_identify: str, service_name: str, prop_name: str) -> str | None:
+    """ 获取属性组key，同组属性需要一起发送 """
+    if service_name == 'set_delay_switch' and prop_name in ['OnTime', 'OffWaitTime']:
+        return f'{product_identify}_{service_name}'
+    return None
+
+
 class IoTHttp:
     """IoT Common HTTP API."""
 

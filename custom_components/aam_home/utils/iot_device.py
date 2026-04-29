@@ -6,7 +6,7 @@ from typing import Any, Optional
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity import Entity
 
-from .common import slugify_did, slugify_name
+from .common import slugify_did, slugify_name, get_service_name, get_prop_name, get_prop_endpoint
 from .iot_client import IoTClient, IoTClientError
 from .iot_error import IoTDeviceError
 from .iot_spec import IoTSpecValueList, IoTSpecProperty, IoTSpecAction, IoTSpecInstance, IoTSpecEvent, IoTSpecValueRange
@@ -51,6 +51,7 @@ class IoTDevice:
     def __init__(self, iot_client: IoTClient, device_info: dict[str, Any], spec_instance: IoTSpecInstance) -> None:
         self.iot_client = iot_client
         self.spec_instance = spec_instance
+        self._entity_map = {}
 
         # 当设备不在线时会显示不可用
         self._online = device_info.get('onlineStatus', 0) == 1
@@ -172,8 +173,7 @@ class IoTDevice:
 
         for prop in self.spec_instance.properties:
             # 过滤掉不支持该属性的endpoint
-            prop_type_strs: list[str] = prop.type_.split(':')
-            if self.endpoint != prop_type_strs[4]:
+            if self.endpoint != get_prop_endpoint(prop.type_):
                 continue
 
             if not prop.platform:
@@ -236,10 +236,8 @@ class IoTPropertyEntity(Entity):
         self._attr_available = iot_device.online  # 实体当前是否可用
 
         # 解析属性设置命令和参数
-        service_type_strs: list[str] = spec.service.type_.split(':')
-        prop_type_strs: list[str] = spec.type_.split(':')
-        self._cmd = service_type_strs[4]
-        self._param_key = prop_type_strs[3]
+        self._cmd = get_service_name(spec.service.type_)
+        self._param_key = get_prop_name(spec.type_)
 
     @property
     def device_info(self) -> Optional[DeviceInfo]:
@@ -259,12 +257,22 @@ class IoTPropertyEntity(Entity):
 
     async def set_property_async(self, value: any) -> bool:
         try:
+            json_data = {self._param_key: value}
+
+            # 如果属性有group_key，需要收集同一组的其他属性一起发送
+            if self.spec.group_key:
+                for prop in self.iot_device.prop_list.get('number', []):
+                    if prop.group_key == self.spec.group_key and prop.name != self.spec.name:
+                        # 获取同一组其他属性的当前值
+                        json_data[prop.name] = 0
+                        break
+
             await self.iot_device.iot_client.set_prop_async(
                 cmd=self._cmd,
                 mid_bind_id=self.iot_device.mid_bind_id,
                 endpoint=self.iot_device.endpoint,
                 group_id=self.iot_device.group_id,
-                json_data={self._param_key: value},
+                json_data=json_data,
             )
         except IoTClientError as e:
             raise RuntimeError(f'{e}, {self.iot_device.mid_bind_id}, {self.iot_device.name}') from e

@@ -3,6 +3,7 @@ import asyncio
 import logging
 from typing import Any, Union, Optional
 
+from .common import get_service_name, get_prop_name, get_prop_group_key
 from .http_client import IoTHttpClient
 from .iot_error import IoTSpecError
 
@@ -121,6 +122,7 @@ class IoTSpecProperty(_IoTSpecBase):
     _value_list: IoTSpecValueList | None
 
     service: 'IoTSpecService'
+    group_key: Optional[str]  # 关联属性组key，同组属性需要一起发送
 
     def __init__(
             self,
@@ -132,7 +134,7 @@ class IoTSpecProperty(_IoTSpecBase):
             value_list: Optional[list[dict]] = None,
     ) -> None:
         super().__init__(spec=spec)
-        self.service = service
+        self.service = service  # 示例：在 IoTSpecParser 解析属性时
         self.format_ = format_
         self.unit = unit
         self.value_range = value_range
@@ -322,15 +324,13 @@ class IoTSpecParser:
                 _LOGGER.error('invalid service, %s', service)
                 continue
 
-            type_strs: list[str] = service['type'].split(':')
             spec_service: IoTSpecService = IoTSpecService(spec=service)
-            spec_service.name = type_strs[4]
+            spec_service.name = get_service_name(service['type'])
 
             for property_ in service.get('properties', []):
                 if 'type' not in property_ or 'description' not in property_ or 'format' not in property_:
                     continue
                 property_['description'] = f'{service['description']} | {property_['description']}'
-                p_type_strs: list[str] = property_['type'].split(':')
                 unit = property_.get('unit', None)
                 spec_prop: IoTSpecProperty = IoTSpecProperty(
                     spec=property_,
@@ -338,9 +338,11 @@ class IoTSpecParser:
                     format_=property_['format'],
                     unit=unit if unit != 'none' else None
                 )
-                spec_prop.name = p_type_strs[3]
+                spec_prop.name = get_prop_name(property_['type'])
                 # 为None时则根据format判断平台类型
                 spec_prop.platform = self._get_platform(property_)
+                # 获取属性组key
+                spec_prop.group_key = get_prop_group_key(product_identify, spec_service.name, spec_prop.name)
 
                 if 'value-list' in property_:
                     spec_prop.value_list = property_['value-list']
