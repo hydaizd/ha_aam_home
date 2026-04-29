@@ -267,8 +267,7 @@ class IoTPropertyEntity(Entity):
             if self.spec.group_key:
                 entity_reg = entity_registry.async_get(self.hass)
                 # 获取设备的所有实体
-                device_id = {(DOMAIN, self.iot_device.did_tag)}
-                entities = entity_registry.async_entries_for_device(entity_reg, device_id)
+                entities = entity_registry.async_entries_for_device(entity_reg, self.iot_device.mid_bind_id)
                 for entity in entities:
                     _LOGGER.warning(f'entity: {entity}')
                     if entity.group_key == self.spec.group_key and entity.name != self.spec.name:
