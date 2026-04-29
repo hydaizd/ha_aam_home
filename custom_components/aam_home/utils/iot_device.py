@@ -265,10 +265,10 @@ class IoTPropertyEntity(Entity):
 
             # 如果属性有group_key，需要收集同一组的其他属性一起发送
             if self.spec.group_key:
-                entity_registry = entity_registry.async_get(self.hass)
+                entity_reg = entity_registry.async_get(self.hass)
                 # 获取设备的所有实体
                 device_id = {(DOMAIN, self.iot_device.did_tag)}
-                entities = entity_registry.get_entries_for_device_id(device_id)
+                entities = entity_reg.get_entries_for_device_id(device_id)
                 for entity in entities:
                     _LOGGER.warning(f'entity: {entity}')
                     if entity.group_key == self.spec.group_key and entity.name != self.spec.name:
