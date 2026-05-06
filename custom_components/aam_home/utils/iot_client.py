@@ -65,6 +65,10 @@ class IoTClient:
         return self._main_loop
 
     @property
+    def iot_storage(self) -> IoTStorage:
+        return self._storage
+
+    @property
     def host(self) -> str:
         return self._host
 
