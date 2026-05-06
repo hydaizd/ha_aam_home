@@ -7,6 +7,7 @@ class IoTErrorCode(Enum):
     """IoT error code."""
     CODE_UNKNOWN = -10000
     CODE_HTTP_INVALID_ACCESS_TOKEN = -10030
+    CODE_AUTH_UNAUTHORIZED = -10020
 
 
 class IoTError(Exception):

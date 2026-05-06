@@ -3,6 +3,7 @@ import asyncio
 import hashlib
 import json
 import logging
+import time
 from typing import Optional
 
 import aiohttp
@@ -63,7 +64,43 @@ class IoTAuthClient:
 
         # 登录成功
         return {
-            'access_token': res_obj.get("data")
+            'access_token': res_obj.get("data"),
+            'expires_ts': int(time.time() + 8 * 3600 * 0.7)
+        }
+
+    async def refresh_access_token_async(self, refresh_token: str) -> dict:
+        """get access token  by refresh token.
+
+        Args:
+            refresh_token (str): refresh_token
+
+        Returns:
+            str: _description_
+        """
+        if not isinstance(refresh_token, str):
+            raise IoTAuthError('invalid refresh_token')
+
+        http_res = await self._session.post(
+            url=f'http://{self._host}:10088/api/basic/user/refreshToken',
+            headers={
+                "Content-Type": "application/json",
+                'Authorization': f'{refresh_token}',
+            },
+            timeout=HTTP_API_TIMEOUT
+        )
+
+        if http_res.status == 401:
+            raise IoTAuthError('unauthorized(401)', IoTErrorCode.CODE_AUTH_UNAUTHORIZED)
+
+        res_str = await http_res.text()
+        res_obj: dict = json.loads(res_str)
+        if not res_obj.get("success"):
+            raise IoTAuthError(f'invalid http response, {res_obj.get("msg")}')
+
+        # 登录成功
+        return {
+            'access_token': res_obj.get("data"),
+            'expires_ts': int(time.time() + 8 * 3600 * 0.7)
         }
 
 

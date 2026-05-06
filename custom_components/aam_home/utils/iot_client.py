@@ -1,7 +1,9 @@
 # -*- coding: utf-8 -*-
 import asyncio
 import logging
-from typing import Optional, Callable
+import time
+import traceback
+from typing import Optional, Callable, final
 
 from homeassistant.core import HomeAssistant
 
@@ -34,6 +36,8 @@ class IoTClient:
 
     # Device list, {mid_bind_id: <info>}
     _device_list: dict[str, dict]
+
+    _refresh_token_timer: Optional[asyncio.TimerHandle]
 
     def __init__(self, entry_id: str, entry_data: dict, storage: IoTStorage,
                  loop: Optional[asyncio.AbstractEventLoop] = None) -> None:
@@ -96,7 +100,7 @@ class IoTClient:
         self._device_list = await self._http.get_devices_async()
 
     async def set_prop_async(self, cmd: str, mid_bind_id: str, endpoint: str, group_id: str,
-                                json_data: dict) -> bool:
+                             json_data: dict) -> bool:
         """设备控制."""
         if f'{mid_bind_id}_{endpoint}' not in self._device_list:
             raise IoTClientError(f'device not exist, {mid_bind_id}_{endpoint}')
@@ -111,6 +115,57 @@ class IoTClient:
         result = await self._http.set_prop_async(data=req_data)
         _LOGGER.debug('ctrl: %s, %s.%s, %s -> %s', cmd, mid_bind_id, endpoint, json_data, result)
         return True
+
+    @final
+    async def refresh_auth_info_async(self) -> bool:
+        try:
+            # Load auth info
+            auth_info: Optional[dict] = None
+            user_config: dict = await self._storage.load_user_config_async(
+                uname=self._uname, host=self._host,
+                keys=['auth_info'])
+            if (
+                    not user_config
+                    or (auth_info := user_config.get('auth_info', None)) is None
+            ):
+                raise IoTClientError('load_user_config_async error')
+            if 'expires_ts' not in auth_info or 'access_token' not in auth_info:
+                raise IoTClientError('invalid auth info')
+
+            # Determine whether to update token
+            refresh_time = int(auth_info['expires_ts'] - time.time())
+            if refresh_time <= 60:
+                valid_auth_info = await self._auth.refresh_access_token_async(refresh_token=auth_info['refresh_token'])
+                auth_info = valid_auth_info
+
+                # Update http token
+                self._http.update_http_header(access_token=valid_auth_info['access_token'])
+
+                # Update storage
+                if not await self._storage.update_user_config_async(
+                        uname=self._uname, host=self._host,
+                        config={'auth_info': auth_info}):
+                    raise IoTClientError('update_user_config_async error')
+                _LOGGER.info('refresh oauth info, get new access_token, %s', auth_info)
+                refresh_time = int(auth_info['expires_ts'] - time.time())
+                if refresh_time <= 0:
+                    raise IoTClientError('invalid expires time')
+            self.__request_refresh_auth_info(refresh_time)
+            _LOGGER.debug('refresh oauth info (%s, %s) after %ds', self._uname, self._host, refresh_time)
+            return True
+        except Exception as err:
+            _LOGGER.error('refresh oauth info error (%s, %s), %s, %s', self._uname, self._host, err,
+                          traceback.format_exc())
+        return False
+
+    @final
+    def __request_refresh_auth_info(self, delay_sec: int) -> None:
+        if self._refresh_token_timer:
+            self._refresh_token_timer.cancel()
+            self._refresh_token_timer = None
+        self._refresh_token_timer = self._main_loop.call_later(
+            delay_sec, lambda: self._main_loop.create_task(
+                self.refresh_auth_info_async()))
 
 
 @staticmethod

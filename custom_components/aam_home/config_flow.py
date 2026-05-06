@@ -5,11 +5,9 @@ import traceback
 from typing import Any, Optional
 
 import voluptuous as vol
-from homeassistant.config_entries import (
-    ConfigFlow,
-    ConfigFlowResult
-)
-from homeassistant.core import HomeAssistant
+from homeassistant import config_entries
+from homeassistant.core import callback
+from homeassistant.data_entry_flow import AbortFlow
 from homeassistant.exceptions import HomeAssistantError
 
 from .const import (
@@ -19,16 +17,21 @@ from .const import (
     CONF_USERNAME,
 )
 from .utils.http_client import IoTAuthClient, IoTHttpClient
+from .utils.iot_client import IoTClient
+from .utils.iot_client import get_iot_instance_async
 from .utils.iot_error import IoTConfigError, IoTError
 from .utils.iot_storage import IoTStorage
 
 _LOGGER = logging.getLogger(__name__)
 
 
-class AamHomeConfigFlow(ConfigFlow, domain=DOMAIN):
+class AamHomeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """处理艾美智空间盒子的配置流程."""
     VERSION = 1
+
+    _config_entry: config_entries.ConfigEntry
     _main_loop: asyncio.AbstractEventLoop
+    _iot_client: IoTClient
     _iot_storage: Optional[IoTStorage]
     _iot_auth: Optional[IoTAuthClient]
     _iot_http: Optional[IoTHttpClient]
@@ -49,7 +52,7 @@ class AamHomeConfigFlow(ConfigFlow, domain=DOMAIN):
         self._iot_auth = None
         self._iot_http = None
 
-    async def async_step_user(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
+    async def async_step_user(self, user_input: dict[str, Any] | None = None):
         """处理初始步骤."""
         self.hass.data.setdefault(DOMAIN, {})
         if not self._storage_path:
@@ -142,3 +145,56 @@ class AamHomeConfigFlow(ConfigFlow, domain=DOMAIN):
         except Exception as err:
             _LOGGER.error('save_auth_info error, %s, %s', err, traceback.format_exc())
             raise IoTConfigError('save_auth_info_error') from err
+
+    @staticmethod
+    @callback
+    def async_get_options_flow(config_entry: config_entries.ConfigEntry) -> config_entries.OptionsFlow:
+        return OptionsFlowHandler(config_entry)
+
+
+class OptionsFlowHandler(config_entries.OptionsFlow):
+    """ 使用户能够在 UI 界面上随时修改已配置集成的可选参数。 """
+    # pylint: disable=unused-argument
+    # pylint: disable=inconsistent-quotes
+    _config_entry: config_entries.ConfigEntry
+    _main_loop: asyncio.AbstractEventLoop
+    _iot_client: IoTClient
+
+    _iot_storage: IoTStorage
+
+    def __init__(self, config_entry: config_entries.ConfigEntry):
+        self._config_entry = config_entry
+        self._main_loop = asyncio.get_event_loop()
+
+        _LOGGER.info('options init, %s, %s, %s, %s', config_entry.entry_id, config_entry.unique_id, config_entry.data,
+                     config_entry.options)
+
+    async def async_step_init(self, user_input=None):
+        """初始化选项流程."""
+        self.hass.data.setdefault(DOMAIN, {})
+
+        try:
+            # IoT client
+            self._iot_client = await get_iot_instance_async(
+                hass=self.hass, entry_id=self._config_entry.entry_id)
+            if not self._iot_client:
+                raise IoTConfigError('invalid miot client')
+
+            # IoT storage
+            self._iot_storage = self._iot_client._storage
+            if not self._iot_storage:
+                raise IoTConfigError('invalid miot storage')
+
+            # Check token
+            if not await self._iot_client.refresh_auth_info_async():
+                _LOGGER.info('refresh auth info error')
+
+            return await self.async_step_config_options()
+
+        except IoTConfigError as err:
+            raise AbortFlow(reason='options_flow_error', description_placeholders={'error': str(err)}) from err
+        except AbortFlow as err:
+            raise err
+        except Exception as err:
+            _LOGGER.error('async_step_init error, %s, %s', err, traceback.format_exc())
+            raise AbortFlow(reason='re_add', description_placeholders={'error': str(err)}) from err
