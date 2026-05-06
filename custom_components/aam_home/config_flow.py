@@ -181,7 +181,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                 raise IoTConfigError('invalid miot client')
 
             # IoT storage
-            self._iot_storage = self._iot_client._storage
+            self._iot_storage = self._iot_client.iot_storage
             if not self._iot_storage:
                 raise IoTConfigError('invalid miot storage')
 
