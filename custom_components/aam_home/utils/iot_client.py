@@ -100,6 +100,8 @@ class IoTClient:
             access_token=self._user_config['auth_info']['access_token'],
             loop=self._main_loop)
 
+        await self.refresh_auth_info_async()
+
         # Load device list
         self._device_list = await self._http.get_devices_async()
 

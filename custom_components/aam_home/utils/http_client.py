@@ -21,6 +21,7 @@ class IoTAuthClient:
     _host: str
     _username: str
     _password: str
+    _base_url: str
 
     def __init__(
             self,
@@ -30,6 +31,7 @@ class IoTAuthClient:
             loop: Optional[asyncio.AbstractEventLoop] = None
     ) -> None:
         self._host = host
+        self._base_url = f'http://{host}:10088'
         self._username = username
         self._password = password
         self._main_loop = loop or asyncio.get_running_loop()
@@ -49,7 +51,7 @@ class IoTAuthClient:
             "passwd": md5.hexdigest()
         }
         http_res = await self._session.post(
-            url=f'http://{self._host}:10088/api/basic/user/login',
+            url=f'{self._base_url}/api/basic/user/login',
             json=payload,
             headers={"Content-Type": "application/json"},
             timeout=HTTP_API_TIMEOUT
@@ -81,7 +83,7 @@ class IoTAuthClient:
             raise IoTAuthError('invalid refresh_token')
 
         http_res = await self._session.post(
-            url=f'http://{self._host}:10088/api/basic/user/refreshToken',
+            url=f'{self._base_url}/api/basic/user/refreshToken',
             headers={
                 "Content-Type": "application/json",
                 'Authorization': f'{refresh_token}',
